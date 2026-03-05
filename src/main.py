@@ -1,16 +1,32 @@
+# 文件：src/main.py
 from models.resource import Book
 from structures.bst import BST
-# ... 导入其他模块
+from structures.hash_table import HashTable
+from models.user import User
 
-class LibraryManager:
+# ... 导入其他队友的文件
+
+class LibrarySystem:
     def __init__(self):
-        self.books_index = BST()  # 组合关系
-        # 初始化其他数据结构
+        # 这里体现了“组合”关系 (Composition)
+        self.book_index = BST()          # 成员 B 的成果
+        self.user_db = HashTable()       # 成员 B 的成果
+        # ... 初始化其他结构
 
-    def run(self):
-        print("--- 欢迎进入 JC1503 图书馆管理系统 ---")
-        # TODO: 主循环逻辑
+    def menu(self):
+        while True:
+            print("\n=== JC1503 图书馆管理系统 ===")
+            print("1. 搜索图书 (BST)")
+            print("2. 借书/还书 (Linked List)")
+            print("3. 分类查看 (General Tree)")
+            print("4. 撤销操作 (Stack)")
+            print("5. 退出并保存 (Storage)")
+            
+            choice = input("请选择功能: ")
+            if choice == "5":
+                print("正在保存数据并退出...")
+                break
+            # TODO: 调用各个模块的方法
 
 if __name__ == "__main__":
-    app = LibraryManager()
-    app.run()
+    
