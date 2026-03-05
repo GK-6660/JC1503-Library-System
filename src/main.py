@@ -1,4 +1,3 @@
-# 文件：src/main.py
 from models.resource import Book
 from structures.bst import BST
 from structures.hash_table import HashTable
@@ -9,8 +8,8 @@ from models.user import User
 class LibrarySystem:
     def __init__(self):
         # 这里体现了“组合”关系 (Composition)
-        self.book_index = BST()          # 成员 B 的成果
-        self.user_db = HashTable()       # 成员 B 的成果
+        self.book_index = BST()          
+        self.user_db = HashTable()       
         # ... 初始化其他结构
 
     def menu(self):
@@ -29,4 +28,4 @@ class LibrarySystem:
             # TODO: 调用各个模块的方法
 
 if __name__ == "__main__":
-    
+    pass

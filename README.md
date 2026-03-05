@@ -1,2 +1,35 @@
-# JC1503-Library-System
-A Python-based Library Management System demonstrating core OOP principles and manual implementation of fundamental data structures. Developed for JC1503 Group Project.
+## 📂 项目目录结构说明 (Project Structure)
+
+为了确保开发不冲突，请各位成员严格按照以下结构存放代码：
+
+### 1. `src/` - 源代码核心区
+* **`main.py`**: 系统启动入口，负责调用各模块逻辑。
+* **`models/`**: 业务逻辑对象定义。
+    * `resource.py`: 抽象基类 `Resource` 以及 `Book`, `Magazine` 子类。(体现继承/多态)
+    * `user.py`: `User` 类定义，包含个人借阅链表。
+* **`structures/`**: 手动实现的底层数据结构 (严禁使用 Python 内置 list/dict 替代核心算法)。
+    * `bst.py`: 二叉搜索树，用于按标题快速搜索图书。
+    * `hash_table.py`: 哈希表，用于按 ID 快速索引用户。
+    * `tree.py`: 通用树，用于学科分类层级管理。
+    * `queue.py`: 队列，用于处理预约排队逻辑。
+    * `linked_list.py`: 双向链表，用于管理用户的借阅记录。
+    * `stack.py`: 栈，用于实现管理员操作的“撤销”功能。
+* **`utils/`**: 工具模块。
+    * `storage.py`: 负责 JSON 序列化与文件读写，实现数据持久化。
+    * `exceptions.py`: 自定义异常类，增强系统鲁棒性。
+
+### 2. `data/` - 数据存储区
+* `library_data.json`: 运行生成的“数据库”，保存系统关闭前的所有状态。
+
+### 3. `tests/` - 测试区
+* 存放所有单元测试脚本，确保每个数据结构逻辑正确。
+
+### 4. `docs/` - 文档与素材
+* 存放 LaTeX 报告源码、类图图片 (UML) 及汇报视频素材。
+
+---
+
+## 🛠 开发协作规范
+1. **禁止越权修改**：除非经过讨论，否则不要改动他人负责的文件。
+2. **包导入规范**：统一从 `src` 开始导入，例如 `from models.user import User`。
+3. **提交说明**：每次 `git commit` 请务必写清楚改动了什么，严禁只有 "update" 字样的备注。

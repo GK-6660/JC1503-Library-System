@@ -8,12 +8,12 @@ class GeneralTree:
         self.root = TreeNode(root_name)
 
     def add_category(self, parent_name, new_category):
-        """TODO: 成员 C 实现添加分类"""
+        """TODO: 实现添加分类"""
         pass
 
     def count_total_items(self, node):
         """
-        TODO: 成员 C 实现递归遍历
+        TODO: 实现递归遍历
         功能：统计该分类及其所有子分类下的图书总数
         """
         pass

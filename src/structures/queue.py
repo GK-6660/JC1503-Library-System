@@ -9,9 +9,9 @@ class Queue:
         self.rear = None
 
     def enqueue(self, user_id):
-        """TODO: 成员 C 实现入队（用户开始排队）"""
+        """TODO: 实现入队（用户开始排队）"""
         pass
 
     def dequeue(self):
-        """TODO: 成员 C 实现出队（排到的人借书）"""
+        """TODO: 实现出队（排到的人借书）"""
         pass

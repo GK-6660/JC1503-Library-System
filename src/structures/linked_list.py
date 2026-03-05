@@ -9,5 +9,5 @@ class DoublyLinkedList:
         self.head = None
     
     def add_to_end(self, data):
-        """TODO: 成员 D 实现双向链表添加逻辑"""
+        """TODO: 实现双向链表添加逻辑"""
         pass

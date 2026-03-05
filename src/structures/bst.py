@@ -9,10 +9,10 @@ class BST:
         self.root = None
 
     def insert(self, book_obj):
-        """TODO: 成员 B 实现插入逻辑"""
+        """TODO: 实现插入逻辑"""
         pass
 
     def search(self, title):
-        """TODO: 成员 B 实现高效搜索"""
+        """TODO: 实现高效搜索"""
         pass
 
