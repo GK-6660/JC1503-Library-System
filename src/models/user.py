@@ -1,20 +1,23 @@
 from structures.linked_list import DoublyLinkedList
 
 class User:
-    def __init__(self, user_id, name):
-        # 封装：使用私有或受保护属性
-        self._user_id = user_id  
-        self.name = name
-        
-        # 组合 (Composition)：每个用户持有一个双向链表
-        # 用于存储该用户当前借阅的 Book 对象
-        self.borrowed_books = DoublyLinkedList()
-        
-        # 财务属性（体现系统逻辑）
-        self.fines = 0.0
+    """图书馆的借阅者"""
+    def __init__(self, user_id: str, name: str):
+        self.user_id = user_id  # 用户ID
+        self.name = name        # 用户姓名
+        # 实例化手写的双向链表，用于存借的书
+        self.borrowed_items = DoublyLinkedList() 
 
-    def get_id(self):
-        return self._user_id
+    def borrow_book(self, book_title: str):
+        """
+        TODO: 将书名(或书的ID)加入到借阅链表中
+        调用 self.borrowed_items.append(...)
+        """
+        pass
 
-    def __str__(self):
-        return f"读者 ID: {self._user_id} | 姓名: {self.name} | 欠费: ￡{self.fines}"
+    def return_book(self, book_title: str):
+        """
+        TODO: 将书名从借阅链表中移除
+        调用 self.borrowed_items.remove(...)
+        """
+        pass
