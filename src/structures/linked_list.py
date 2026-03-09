@@ -40,23 +40,23 @@ class DoublyLinkedList:
         提示：遍历链表，找到后修改前驱和后继节点的指针。如果没找到，可以 print 提示。
         """
         current = self.head
-        while current.data != data:
-            current = current.next
-            if current.data is None:
-                return False
+        while current is not None:
+        if current.data == data:
 
-        if current.prev is not None:
-            current.prev.next = current.next
-
-        else:
-            self.head = current.next
-
-        if current.next is not None:
-
-            current.next.prev = current.prev
-        else:
-            self.tail = current.prev
-        return True
+            if current.prev is not None:
+                current.prev.next = current.next
+            else:
+                self.head = current.next
+            
+            if current.next is not None:
+                current.next.prev = current.prev
+            else:
+                self.tail = current.prev
+            
+            self.size -= 1
+            return True
+            
+        current = current.next
 
     
     # 会返回列表
