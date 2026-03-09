@@ -22,7 +22,16 @@ class DoublyLinkedList:
         TODO: 在链表尾部添加一个新节点
         提示：考虑链表为空和不为空两种情况，正确连接 prev 和 next 指针
         """
-        pass
+        new_node = Node(data)
+        if self.head is None:
+            self.head = new_node
+            self.tail = new_node
+        else:
+            self.tail.next = new_node
+            new_node.prev = self.tail
+            self.tail = new_node
+        self.size += 1
+
 
     # 还书（拿走某个节点）
     def remove(self, data):
@@ -30,7 +39,25 @@ class DoublyLinkedList:
         TODO: 找到包含该 data 的节点并删除
         提示：遍历链表，找到后修改前驱和后继节点的指针。如果没找到，可以 print 提示。
         """
-        pass
+        current = self.head
+        while current is not None:
+        if current.data == data:
+
+            if current.prev is not None:
+                current.prev.next = current.next
+            else:
+                self.head = current.next
+            
+            if current.next is not None:
+                current.next.prev = current.prev
+            else:
+                self.tail = current.prev
+            
+            self.size -= 1
+            return True
+            
+        current = current.next
+
     
     # 会返回列表
     def to_list(self):
