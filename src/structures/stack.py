@@ -19,7 +19,7 @@ class Stack:
         2. 新节点的 next 指向当前的 top
         3. top 更新为新节点
         """
-        new_item = StackNode(item)
+        new_item = StackNode(action_data)
         if self.top is None:
             self.top = new_item
         else:
@@ -38,6 +38,7 @@ class Stack:
         if self.top is None:
             return None
         else :
-            item = self.top.item
+            data = self.top.action_data
             self.top = self.top.next
         self.size-=1
+        return data
