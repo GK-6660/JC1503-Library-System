@@ -30,15 +30,37 @@ class BST:
         TODO: 递归查找插入位置
         如果 key < current_node.key，往左走；如果大于，往右走。
         """
-        pass
+        if key < current_node.key:
+            if current_node.left is None:
+                current_node.left = BSTNode(key, value)
+            else:
+                self._insert_recursive(current_node.left, key, value)
+        else:
+            if current_node.right is None:
+                current_node.right = BSTNode(key, value)
+            else:
+                self._insert_recursive(current_node.right, key, value)
 
     def search(self, key: str):
         """
         TODO: 根据书名搜索图书对象
         提示：调用 _search_recursive。如果最后返回 None，抛出 ItemNotFoundError。
         """
-        pass
+        if self.root.key == key:
+            return self.root
+        else:
+            return self._search_recursive(self.root, key)
 
     def _search_recursive(self, current_node, key):
         """TODO: 递归搜索逻辑"""
-        pass
+        if current_node.key > key:
+            if current_node.left.key == key:
+                return current_node.left
+            else:
+                return self._search_recursive(current_node.left, key)
+        else:
+            if current_node.right.key == key:
+                return current_node.right
+            else:
+                return self._search_recursive(current_node.right, key)
+
