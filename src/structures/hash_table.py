@@ -35,38 +35,24 @@ class HashTable:
 
 
     def insert(self, key: str, value):
-        """
-        把学生放进对应的抽屉里
-        组员开发提示：
-        1. 算抽屉号：index = self._hash_function(key)
-        2. 拉开抽屉看一看：current = self.table[index]
-        3. 如果抽屉是空的 (if current is None):
-           - 直接放进去：self.table[index] = HashNode(key, value)
-        4. 如果抽屉里有人了（冲突了）：
-           - 用 while 循环找到链表的最后一个节点
-           - 注意：顺便检查一下是不是这个学号已经存在了，如果存在可以更新 value，或者直接 return
-           - 加在最后面：last_node.next = HashNode(key, value)
-        """
-       index = self._hash_function(key)
+        index = self._hash_function(key)
         current = self.table[index]
+
         if current is None:
             self.table[index] = HashNode(key, value)
             self.size += 1
-        elif current is not None:
-             while current.key != key:
-                prev=current
-                if prev.next is not None:
-                    current = current.next
-                else:
-                    current = HashNode(None,None)
+            return "finish"
 
-                    if current.key is None:
-                        current = HashNode(key, value)
-                        prev.next = current
-                if current.key == key:
-                    current.value = value
-
-
+        prev = None
+        while current is not None:
+            if current.key == key:
+                current.value = value 
+                return "finish"
+            prev = current
+            current = current.next
+            
+        prev.next = HashNode(key, value)
+        self.size += 1
         return "finish"
 
     def get(self, key: str):
