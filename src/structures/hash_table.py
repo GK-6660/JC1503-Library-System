@@ -27,7 +27,12 @@ class HashTable:
         3. 把字符转成数字加起来：total += ord(char)  # ord()可以把字母变成ASCII数字
         4. 对抽屉总数求余：return total % self.capacity
         """
-        pass
+        total=0
+        for char in key:
+            total += ord(char)
+
+        return total % self.capacity
+
 
     def insert(self, key: str, value):
         """
@@ -42,7 +47,24 @@ class HashTable:
            - 注意：顺便检查一下是不是这个学号已经存在了，如果存在可以更新 value，或者直接 return
            - 加在最后面：last_node.next = HashNode(key, value)
         """
-        pass
+        index = self._hash_function(key)
+        current = self.table[index]
+        if current is None:
+            self.table[index] = HashNode(key, value)
+            self.size += 1
+        elif current is not None:
+             while current.key != key:
+                prev=current
+                current = current.next
+                if current.key is None:
+                    current = HashNode(key, value)
+                    prev.next = current
+             if current.key == key:
+                current.value = value
+
+
+        return "finish"
+
 
     def get(self, key: str):
         """
@@ -58,4 +80,14 @@ class HashTable:
         4. 找完了还没找到，抛出报错：
            raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
         """
-        pass
+       index = self._hash_function(key)
+        current = self.table[index]
+        while current is not None:
+            if current.key == key:
+                return current.value
+            current = current.next
+        if current is None:
+            raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
+
+
+        return "finish"
