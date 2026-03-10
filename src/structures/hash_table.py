@@ -27,22 +27,33 @@ class HashTable:
         3. 把字符转成数字加起来：total += ord(char)  # ord()可以把字母变成ASCII数字
         4. 对抽屉总数求余：return total % self.capacity
         """
-        pass
+        total=0
+        for char in key:
+            total += ord(char)
+
+        return total % self.capacity
+
 
     def insert(self, key: str, value):
-        """
-        把学生放进对应的抽屉里
-        组员开发提示：
-        1. 算抽屉号：index = self._hash_function(key)
-        2. 拉开抽屉看一看：current = self.table[index]
-        3. 如果抽屉是空的 (if current is None):
-           - 直接放进去：self.table[index] = HashNode(key, value)
-        4. 如果抽屉里有人了（冲突了）：
-           - 用 while 循环找到链表的最后一个节点
-           - 注意：顺便检查一下是不是这个学号已经存在了，如果存在可以更新 value，或者直接 return
-           - 加在最后面：last_node.next = HashNode(key, value)
-        """
-        pass
+        index = self._hash_function(key)
+        current = self.table[index]
+
+        if current is None:
+            self.table[index] = HashNode(key, value)
+            self.size += 1
+            return "finish"
+
+        prev = None
+        while current is not None:
+            if current.key == key:
+                current.value = value 
+                return "finish"
+            prev = current
+            current = current.next
+            
+        prev.next = HashNode(key, value)
+        self.size += 1
+        return "finish"
 
     def get(self, key: str):
         """
@@ -58,4 +69,14 @@ class HashTable:
         4. 找完了还没找到，抛出报错：
            raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
         """
-        pass
+        index = self._hash_function(key)
+        current = self.table[index]
+        while current is not None:
+            if current.key == key:
+                return current.value
+            current = current.next
+        if current is None:
+            raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
+
+
+        return "finish"
