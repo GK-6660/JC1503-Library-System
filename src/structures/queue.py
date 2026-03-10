@@ -29,7 +29,14 @@ class Queue:
            - 把“队尾”的称号交给新人 (self.rear = new_node)
         4. 队伍人数加一 (self.size += 1)
         """
-        pass
+        new_node = QueueNode(user_id)
+        if self.rear is None:
+            self.front = self.rear = new_node
+            self.size += 1
+        else:
+            self.rear.next = new_node
+            self.rear = new_node
+            self.size += 1
 
     def dequeue(self) -> str:
         """
@@ -45,7 +52,15 @@ class Queue:
         5. 队伍人数减一 (self.size -= 1)
         6. 返回拿到的学号：return borrower_id
         """
-        pass
+        if self.front is None:
+            return None
+        else:
+            borrower_id = self.front.user_id
+            self.front = self.front.next
+            if self.front is None:
+                self.rear = None
+            self.size -= 1
+            return borrower_id
         
     def is_empty(self) -> bool:
         return self.size == 0
