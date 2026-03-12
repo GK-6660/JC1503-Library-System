@@ -29,10 +29,21 @@ class CategoryTree:
            - 把它塞进父节点的 children 链表里：
              parent_node.children.append(new_node)
         """
-        pass
+        parent_node = self._find_node(self.root, parent_name)
+        if parent_node is None:
+            return "找不到父类"
+        else:
+            new_node = TreeNode(new_category_name)
+            parent_node.children.append(new_node)
+            return "finish"
+
 
     def _find_node(self, current_node, target_name):
         """
         TODO: 递归辅助函数，用于在树中查找特定名字的节点
         """
-        pass
+        if current_node.name == target_name:
+            return current_node
+        else:
+            for child in current_node.children:
+                return self._find_node(child, target_name)
