@@ -4,7 +4,8 @@ from structures.hash_table import HashTable
 from structures.bst import BST
 
 # 定义数据文件路径
-DATA_FILE = os.path.join(os.path.dirname(__file__), '../../data/library_data.json')
+DATA_FILE = os.path.join(os.path.dirname(__file__), "../../data/library_data.json")
+
 
 class Storage:
     @staticmethod
@@ -19,7 +20,7 @@ class Storage:
         pass
 
     @staticmethod
-    def load_data() -> tuple:   # 注意返回的是元组
+    def load_data() -> tuple:  # 注意返回的是元组
         """
         TODO: 系统启动时加载数据
         1. 检查 DATA_FILE 是否存在，不存在则返回空的 HashTable 和 BST

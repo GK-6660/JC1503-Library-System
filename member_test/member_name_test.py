@@ -1,6 +1,0 @@
-print("zzj")
-print("zyt")
-print("hys")
-print("zwy")
-print("qdr")
-print("lyj")

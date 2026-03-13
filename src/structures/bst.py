@@ -1,17 +1,20 @@
 from utils.exceptions import ItemNotFoundError
 
+
 class BSTNode:
     def __init__(self, key: str, value):
-        self.key = key      # 通常是书名 (title)，用于字母排序比对
+        self.key = key  # 通常是书名 (title)，用于字母排序比对
         self.value = value  # 存放 Resource/Book 对象
         self.left = None
         self.right = None
+
 
 class BST:
     """
     二叉搜索树。用于按书名快速搜索图书。
     组员任务：重点搞懂递归逻辑！
     """
+
     def __init__(self):
         self.root = None
 
