@@ -3,11 +3,13 @@ class StackNode:
         self.action_data = action_data  # 记录操作内容，比如字典 {"action": "borrow", "user": "123", "book": "Python"}
         self.next = None
 
+
 class Stack:
     """
     手动实现的后进先出 (LIFO) 栈。
     用于记录操作历史，实现撤销功能。
     """
+
     def __init__(self):
         self.top = None  # 栈顶指针
         self.size = 0
@@ -37,8 +39,8 @@ class Stack:
         """
         if self.top is None:
             return None
-        else :
+        else:
             data = self.top.action_data
             self.top = self.top.next
-        self.size-=1
+        self.size -= 1
         return data

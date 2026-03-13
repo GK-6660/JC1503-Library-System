@@ -1,21 +1,26 @@
 from utils.exceptions import LibraryBaseException
 
 """排队借书"""
+
+
 class QueueNode:
     """队列节点"""
+
     def __init__(self, user_id: str):
         self.user_id = user_id  # 存排队人的id
-        self.next = None        # 指向后面排队的人
+        self.next = None  # 指向后面排队的人
+
 
 class Queue:
     """
     手动实现的先进先出 (FIFO) 队列。
     严禁使用 Python 的 list.append() 和 list.pop(0)！
     """
+
     def __init__(self):
         self.front = None  # 队头（准备出队的元素）
-        self.rear = None   # 队尾（新加入的元素）
-        self.size = 0      # 队伍总人数
+        self.rear = None  # 队尾（新加入的元素）
+        self.size = 0  # 队伍总人数
 
     def enqueue(self, user_id: str):
         """
@@ -46,6 +51,6 @@ class Queue:
         6. 返回拿到的学号：return borrower_id
         """
         pass
-        
+
     def is_empty(self) -> bool:
         return self.size == 0

@@ -1,12 +1,14 @@
 from structures.linked_list import DoublyLinkedList
 
+
 class User:
     """图书馆的借阅者"""
+
     def __init__(self, user_id: str, name: str):
         self.user_id = user_id  # 用户ID
-        self.name = name        # 用户姓名
+        self.name = name  # 用户姓名
         # 实例化手写的双向链表，用于存借的书
-        self.borrowed_items = DoublyLinkedList() 
+        self.borrowed_items = DoublyLinkedList()
 
     def borrow_book(self, book_title: str):
         """

@@ -1,20 +1,21 @@
 class Node:
     """双向链表的节点"""
-    def __init__(self, data):
-        self.data = data    # 链表节点对应的数据
-        self.prev = None    # 指向上一个节点
-        self.next = None    # 指向下一个节点
 
+    def __init__(self, data):
+        self.data = data  # 链表节点对应的数据
+        self.prev = None  # 指向上一个节点
+        self.next = None  # 指向下一个节点
 # 总链表
 class DoublyLinkedList:
     """
     手动实现的双向链表。
     组员任务：实现数据的增删改查。
     """
+
     def __init__(self):
-        self.head = None    # 表头（第一本书）
-        self.tail = None    # 表尾（最后一本书）
-        self.size = 0       # 记录一共借了多少本书
+        self.head = None  # 表头（第一本书）
+        self.tail = None  # 表尾（最后一本书）
+        self.size = 0  # 记录一共借了多少本书
 
     # 借书（在尾部加节点）
     def append(self, data):
@@ -32,33 +33,31 @@ class DoublyLinkedList:
             self.tail = new_node
         self.size += 1
 
-
     # 还书（拿走某个节点）
     def remove(self, data):
-        """
-        TODO: 找到包含该 data 的节点并删除
-        提示：遍历链表，找到后修改前驱和后继节点的指针。如果没找到，可以 print 提示。
-        """
         current = self.head
         while current is not None:
-        if current.data == data:
+            if current.data == data:
+                # 处理前驱节点或 head
+                if current.prev is not None:
+                    current.prev.next = current.next
+                else:
+                    self.head = current.next
 
-            if current.prev is not None:
-                current.prev.next = current.next
-            else:
-                self.head = current.next
-            
-            if current.next is not None:
-                current.next.prev = current.prev
-            else:
-                self.tail = current.prev
-            
-            self.size -= 1
-            return True
-            
-        current = current.next
+                # 处理后继节点或 tail
+                if current.next is not None:
+                    current.next.prev = current.prev
+                else:
+                    self.tail = current.prev
 
-    
+                self.size -= 1
+                return True
+
+            current = current.next
+
+        print(f"Data {data} not found.")
+        return False
+
     # 会返回列表
     def to_list(self):
         """辅助方法：将链表内容转为普通列表（仅用于最后的打印展示或保存JSON）"""

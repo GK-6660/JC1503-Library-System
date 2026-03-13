@@ -1,21 +1,25 @@
 from utils.exceptions import ItemNotFoundError, DuplicateItemError
 
+
 class HashNode:
     """哈希表中的节点（用于链地址法解决冲突）"""
+
     def __init__(self, key, value):
-        self.key = key      # 存ID
+        self.key = key  # 存ID
         self.value = value  # 这里通常存 User 对象
-        self.next = None    # 冲突时指向下一个人
+        self.next = None  # 冲突时指向下一个人
+
 
 class HashTable:
     """
     手动实现的哈希表。
     主要用于通过 user_id 快速查找 User 对象。
     """
+
     def __init__(self, capacity=100):
         self.capacity = capacity
         # Python中没有纯数组，这里用固定长度的list模拟底层连续内存，严禁调用 append 等动态方法！
-        self.table = [None] * capacity 
+        self.table = [None] * capacity
         self.size = 0
 
     def _hash_function(self, key: str) -> int:
@@ -27,12 +31,11 @@ class HashTable:
         3. 把字符转成数字加起来：total += ord(char)  # ord()可以把字母变成ASCII数字
         4. 对抽屉总数求余：return total % self.capacity
         """
-        total=0
+        total = 0
         for char in key:
             total += ord(char)
 
         return total % self.capacity
-
 
     def insert(self, key: str, value):
         index = self._hash_function(key)
@@ -46,11 +49,11 @@ class HashTable:
         prev = None
         while current is not None:
             if current.key == key:
-                current.value = value 
+                current.value = value
                 return "finish"
             prev = current
             current = current.next
-            
+
         prev.next = HashNode(key, value)
         self.size += 1
         return "finish"
@@ -77,6 +80,5 @@ class HashTable:
             current = current.next
         if current is None:
             raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
-
 
         return "finish"
