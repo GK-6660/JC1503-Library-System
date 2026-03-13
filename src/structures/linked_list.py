@@ -5,6 +5,8 @@ class Node:
         self.data = data  # 链表节点对应的数据
         self.prev = None  # 指向上一个节点
         self.next = None  # 指向下一个节点
+
+
 # 总链表
 class DoublyLinkedList:
     """
