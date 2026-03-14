@@ -41,22 +41,24 @@ class HashTable:
         index = self._hash_function(key)
         current = self.table[index]
 
+        # 如果这个位置是空的，直接放入
         if current is None:
             self.table[index] = HashNode(key, value)
             self.size += 1
-            return "finish"
+            return
 
+        # 如果不为空，遍历链表
         prev = None
         while current is not None:
             if current.key == key:
-                current.value = value
-                return "finish"
+                # 发现ID已经存在，抛出异常
+                raise DuplicateItemError(f"用户 ID {key} 已存在，请勿重复添加")
             prev = current
             current = current.next
 
+        # 挂在链表末尾
         prev.next = HashNode(key, value)
         self.size += 1
-        return "finish"
 
     def get(self, key: str):
         """
@@ -78,7 +80,29 @@ class HashTable:
             if current.key == key:
                 return current.value
             current = current.next
-        if current is None:
-            raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
 
-        return "finish"
+        raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
+
+    def remove(self, key: str):
+        """
+        删除指定 key 的用户
+        如果找不到就抛出 ItemNotFoundError
+        """
+        index = self._hash_function(key)
+        current = self.table[index]
+        prev = None
+
+        while current is not None:
+            if current.key == key:
+                if prev is None:
+                    # 删除头节点
+                    self.table[index] = current.next
+                else:
+                    # 删除中间或尾节点
+                    prev.next = current.next
+                self.size -= 1
+                return
+            prev = current
+            current = current.next
+
+        raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
