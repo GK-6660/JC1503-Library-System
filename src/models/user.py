@@ -15,30 +15,28 @@ class User:
         TODO: 将书名(或书的ID)加入到借阅链表中
         调用 self.borrowed_items.append(...)
         """
-        self.borrowed_items.append(book_title)  # 将书名加入到借阅链表中
-        print(f"{self.name} 已借阅 {book_title}")
+        self.borrowed_items.append(book_title)
 
     def return_book(self, book_title: str):
         """
         TODO: 将书名从借阅链表中移除
         调用 self.borrowed_items.remove(...)
         """
-        # 从借阅链表中移除书名
-        result = self.borrowed_items.remove(book_title)
-        if result:
-            print(f"{self.name} 已归还 {book_title}")
-        else:
-            print(f"{self.name} 没有借阅 {book_title}")
-        return result  # 返回是否成功归还
+        success = self.borrowed_items.remove(book_title)
+        if not success:
+            print(f"User {self.name} does not have book '{book_title}' borrowed.")
+        return success
 
-    def get_borrowed_list(self):
-        """获取用户借阅的所有书籍列表"""
-        return self.borrowed_items.to_list()
+    def to_dict(self):
+        return {
+            "user_id": self.user_id,
+            "name": self.name,
+            "borrowed_items": self.borrowed_items.to_list()
+        }
 
-    def __str__(self):
-        borrowed_titles = self.borrowed_items.to_list()
-        if borrowed_titles:
-            books_str = "、".join(borrowed_titles)
-            return f"用户: {self.name}({self.user_id}) - 已借书籍: {books_str}"
-        else:
-            return f"用户: {self.name}({self.user_id}) - 暂无借阅"
+    @classmethod
+    def from_dict(cls, data):
+        user = cls(data["user_id"], data["name"])
+        for item in data["borrowed_items"]:
+            user.borrowed_items.append(item)
+        return user

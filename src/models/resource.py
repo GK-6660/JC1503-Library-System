@@ -28,7 +28,6 @@ class Resource:
         """
         if self.available_copies > 0:
             self.available_copies -= 1
-            return True  # 成功借出
         else:
             raise OutOfStockError(f"{self.title} 没库存了")
 
@@ -41,17 +40,28 @@ class Resource:
         """
         if self.available_copies < self.total_copies:
             self.available_copies += 1
+            if not self.waitlist.is_empty():
+                user_id = self.waitlist.dequeue()
+                # 这里我们假设从 waitlist 出来的人就自动借走了书
+                # 所以库存又要减 1
+                self.available_copies -= 1
+                return user_id  # 返回借走书的用户ID，以便上层通知
+        return None
 
-        # 检查等待队列
-        if not self.waitlist.is_empty():
-            # 列表不为空，把书自动借给第一个人
-            next_user_id = self.waitlist.dequeue()  # 从队列中取出下一个用户ID
-            self.borrow_item()  # 借出一本书给这个用户
-            print(f"已自动将 {self.title} 借给排队的用户 {next_user_id}")
-            self.available_copies -= 1  # 更新库存，因为已经借出了一本书
+    def to_dict(self):
+        return {
+            "resource_id": self.resource_id,
+            "title": self.title,
+            "total_copies": self.total_copies,
+            "available_copies": self.available_copies,
+            "waitlist": self.waitlist.to_list(),
+            "type": self.__class__.__name__
+        }
 
-            return next_user_id  # 返回被借走的用户ID，方便后续处理
-        return None  # 没有用户排队，正常归还
+    @classmethod
+    def from_dict(cls, data):
+        # This method should be overridden or handled by a factory
+        pass
 
 
 class Book(Resource):
@@ -62,8 +72,31 @@ class Book(Resource):
     ):
         # TODO: 调用父类的 __init__ 方法初始化公共属性
         # super().__init__(...)
+        super().__init__(resource_id, title, total_copies)
         self.author = author  # 作者
         self.isbn = isbn  # 书号
+
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({
+            "author": self.author,
+            "isbn": self.isbn
+        })
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        book = cls(
+            resource_id=data["resource_id"],
+            title=data["title"],
+            total_copies=data["total_copies"],
+            author=data["author"],
+            isbn=data["isbn"]
+        )
+        book.available_copies = data["available_copies"]
+        for user_id in data.get("waitlist", []):
+            book.waitlist.enqueue(user_id)
+        return book
 
 
 class Magazine(Resource):
@@ -74,4 +107,24 @@ class Magazine(Resource):
     ):
         # TODO: 调用父类初始化，并添加自己的 issue_number 属性
         super().__init__(resource_id, title, total_copies)
-        self.issue_number = issue_number  # 期号
+        self.issue_number = issue_number
+  
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({
+            "issue_number": self.issue_number
+        })
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        magazine = cls(
+            resource_id=data["resource_id"],
+            title=data["title"],
+            total_copies=data["total_copies"],
+            issue_number=data["issue_number"]
+        )
+        magazine.available_copies = data["available_copies"]
+        for user_id in data.get("waitlist", []):
+            magazine.waitlist.enqueue(user_id)
+        return magazine
