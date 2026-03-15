@@ -26,7 +26,11 @@ class Resource:
         2. 如果有库存，就把库存减 1 (self.available_copies -= 1)
         3. 如果没库存，抛出报错：raise OutOfStockError(f"{self.title} 没库存了")
         """
-        pass
+        if self.available_copies > 0:
+            self.available_copies -= 1
+            return True  # 成功借出
+        else:
+            raise OutOfStockError(f"{self.title} 没库存了")
 
     # 还书动作
     def return_item(self):
@@ -35,7 +39,19 @@ class Resource:
         1. available_copies 加 1 (但不能超过 total_copies)
         2. 检查 waitlist 队列里有没有人在排队，如果有，自动把书借给队列里的第一个人
         """
-        pass
+        if self.available_copies < self.total_copies:
+            self.available_copies += 1
+
+        # 检查等待队列
+        if not self.waitlist.is_empty():
+            # 列表不为空，把书自动借给第一个人
+            next_user_id = self.waitlist.dequeue()  # 从队列中取出下一个用户ID
+            self.borrow_item()  # 借出一本书给这个用户
+            print(f"已自动将 {self.title} 借给排队的用户 {next_user_id}")
+            self.available_copies -= 1  # 更新库存，因为已经借出了一本书
+
+            return next_user_id  # 返回被借走的用户ID，方便后续处理
+        return None  # 没有用户排队，正常归还
 
 
 class Book(Resource):
@@ -57,4 +73,5 @@ class Magazine(Resource):
         self, resource_id: str, title: str, total_copies: int, issue_number: str
     ):
         # TODO: 调用父类初始化，并添加自己的 issue_number 属性
-        pass
+        super().__init__(resource_id, title, total_copies)
+        self.issue_number = issue_number  # 期号
