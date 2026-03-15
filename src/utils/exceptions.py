@@ -1,25 +1,33 @@
-class LibraryError(Exception):
-    """图书馆系统所有自定义异常的基类"""
-    def __init__(self, message="图书馆系统发生错误"):
-        self.message = message
-        super().__init__(self.message)
+"""
+自定义异常类
+组员注意：当你的代码遇到错误（比如找不到书、库存不够）时，
+不要直接 print，而是 raise 这里的异常！
+"""
 
-class ItemNotFoundError(LibraryError):
-    """当在 BST 或 链表中找不到书籍时触发"""
-    def __init__(self, item_name):
-        super().__init__(f"未找到资源: 《{item_name}》")
 
-class UserNotFoundError(LibraryError):
-    """当 Hash Table 中找不到该用户 ID 时触发"""
-    def __init__(self, user_id):
-        super().__init__(f"未找到用户 ID: {user_id}")
+# 定义总基类
+class LibraryBaseException(Exception):
+    """所有图书馆系统异常的基类"""
 
-class OutOfStockError(LibraryError):
-    """当书籍已借出且预约队列已满时触发"""
-    def __init__(self, title):
-        super().__init__(f"《{title}》目前不可借阅且预约人数已达上限")
+    pass
 
-class FileDataError(LibraryError):
-    """当 JSON 文件损坏或无法读取时触发 (成员 E 负责)"""
-    def __init__(self):
-        super().__init__("系统数据文件损坏或格式错误")
+
+# 找不到东西
+class ItemNotFoundError(LibraryBaseException):
+    """当在 BST 或哈希表中找不到指定资源或用户时抛出"""
+
+    pass
+
+
+# 库存不足
+class OutOfStockError(LibraryBaseException):
+    """当图书库存为 0，无法借阅时抛出"""
+
+    pass
+
+
+# 重复添加
+class DuplicateItemError(LibraryBaseException):
+    """当试图添加已经存在的用户或书籍时抛出"""
+
+    pass
