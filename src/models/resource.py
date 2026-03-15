@@ -63,6 +63,7 @@ class Resource:
         # This method should be overridden or handled by a factory
         pass
 
+
 class Book(Resource):
     """图书类，继承自 Resource"""
 
@@ -107,7 +108,7 @@ class Magazine(Resource):
         # TODO: 调用父类初始化，并添加自己的 issue_number 属性
         super().__init__(resource_id, title, total_copies)
         self.issue_number = issue_number
-
+  
     def to_dict(self):
         data = super().to_dict()
         data.update({
