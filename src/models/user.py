@@ -15,11 +15,28 @@ class User:
         TODO: 将书名(或书的ID)加入到借阅链表中
         调用 self.borrowed_items.append(...)
         """
-        pass
+        self.borrowed_items.append(book_title)
 
     def return_book(self, book_title: str):
         """
         TODO: 将书名从借阅链表中移除
         调用 self.borrowed_items.remove(...)
         """
-        pass
+        success = self.borrowed_items.remove(book_title)
+        if not success:
+            print(f"User {self.name} does not have book '{book_title}' borrowed.")
+        return success
+
+    def to_dict(self):
+        return {
+            "user_id": self.user_id,
+            "name": self.name,
+            "borrowed_items": self.borrowed_items.to_list()
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        user = cls(data["user_id"], data["name"])
+        for item in data["borrowed_items"]:
+            user.borrowed_items.append(item)
+        return user

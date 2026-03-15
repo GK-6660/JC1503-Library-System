@@ -33,15 +33,89 @@ class BST:
         TODO: 递归查找插入位置
         如果 key < current_node.key，往左走；如果大于，往右走。
         """
-        pass
+        if key < current_node.key:
+            if current_node.left is None:
+                current_node.left = BSTNode(key, value)
+            else:
+                self._insert_recursive(current_node.left, key, value)
+        elif key > current_node.key:
+            if current_node.right is None:
+                current_node.right = BSTNode(key, value)
+            else:
+                self._insert_recursive(current_node.right, key, value)
+        else:
+            # key exists, update value or raise error?
+            # Assuming update for now or just ignore
+            current_node.value = value
 
     def search(self, key: str):
         """
         TODO: 根据书名搜索图书对象
         提示：调用 _search_recursive。如果最后返回 None，抛出 ItemNotFoundError。
         """
-        pass
+        result = self._search_recursive(self.root, key)
+        if result is None:
+            raise ItemNotFoundError(f"Book with title '{key}' not found.")
+        return result
 
     def _search_recursive(self, current_node, key):
         """TODO: 递归搜索逻辑"""
-        pass
+        if current_node is None:
+            return None
+        if key == current_node.key:
+            return current_node.value
+        elif key < current_node.key:
+            return self._search_recursive(current_node.left, key)
+        else:
+            return self._search_recursive(current_node.right, key)
+
+    def remove(self, key: str):
+        """Remove a node by key"""
+        self.root = self._remove_recursive(self.root, key)
+
+    def _remove_recursive(self, current_node, key):
+        if current_node is None:
+            return None
+
+        if key < current_node.key:
+            current_node.left = self._remove_recursive(current_node.left, key)
+        elif key > current_node.key:
+            current_node.right = self._remove_recursive(current_node.right, key)
+        else:
+            # Node found
+            # Case 1: No children (leaf)
+            if current_node.left is None and current_node.right is None:
+                return None
+            
+            # Case 2: One child
+            if current_node.left is None:
+                return current_node.right
+            if current_node.right is None:
+                return current_node.left
+            
+            # Case 3: Two children
+            # Find in-order successor (smallest in right subtree)
+            successor = self._find_min(current_node.right)
+            current_node.key = successor.key
+            current_node.value = successor.value
+            current_node.right = self._remove_recursive(current_node.right, successor.key)
+        
+        return current_node
+
+    def _find_min(self, node):
+        current = node
+        while current.left is not None:
+            current = current.left
+        return current
+
+    def to_list(self):
+        """Helper method to convert BST to a list of values (books/resources)"""
+        result = []
+        self._inorder_traversal(self.root, result)
+        return result
+
+    def _inorder_traversal(self, node, result):
+        if node:
+            self._inorder_traversal(node.left, result)
+            result.append(node.value)
+            self._inorder_traversal(node.right, result)

@@ -73,3 +73,12 @@ class Queue:
 
     def is_empty(self) -> bool:
         return self.size == 0
+
+    def to_list(self):
+        """Helper method to convert queue to list"""
+        result = []
+        current = self.front
+        while current:
+            result.append(current.user_id)
+            current = current.next
+        return result

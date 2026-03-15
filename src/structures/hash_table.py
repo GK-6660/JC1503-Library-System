@@ -106,3 +106,13 @@ class HashTable:
             current = current.next
 
         raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
+
+    def to_list(self):
+        """Helper method to get all values (users) from the hash table."""
+        all_items = []
+        for i in range(self.capacity):
+            current = self.table[i]
+            while current:
+                all_items.append(current.value)
+                current = current.next
+        return all_items
