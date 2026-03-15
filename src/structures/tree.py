@@ -1,8 +1,74 @@
 # 可以引入前面写的链表来存储子节点
 # from structures.linked_list import DoublyLinkedList
+import sys
+import os
 
-from linked_list import DoublyLinkedList
-from utils.exceptions import ItemNotFoundError, DuplicateItemError
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(current_dir)
+project_dir = os.path.dirname(src_dir)
+if project_dir not in sys.path:
+    sys.path.insert(0, project_dir)
+
+try:
+    from src.structures.linked_list import DoublyLinkedList
+    from src.utils.exceptions import ItemNotFoundError, DuplicateItemError
+except ImportError:
+    # 如果导入失败，尝试其他路径
+    try:
+        from structures.linked_list import DoublyLinkedList
+        from utils.exceptions import ItemNotFoundError, DuplicateItemError
+    except ImportError:
+        print("警告: 无法导入链表模块，使用临时实现")
+
+        # 临时实现一个简单的链表
+        class Node:
+            def __init__(self, data):
+                self.data = data
+                self.next = None
+                self.prev = None
+
+        class DoublyLinkedList:
+            def __init__(self):
+                self.head = None
+                self.tail = None
+                self._size = 0
+
+            def append(self, data):
+                new_node = Node(data)
+                if not self.head:
+                    self.head = new_node
+                    self.tail = new_node
+                else:
+                    new_node.prev = self.tail
+                    self.tail.next = new_node
+                    self.tail = new_node
+                self._size += 1
+
+            def remove(self, data):
+                current = self.head
+                while current:
+                    if current.data == data:
+                        if current.prev:
+                            current.prev.next = current.next
+                        if current.next:
+                            current.next.prev = current.prev
+                        if current == self.head:
+                            self.head = current.next
+                        if current == self.tail:
+                            self.tail = current.prev
+                        self._size -= 1
+                        return True
+                    current = current.next
+                return False
+
+            def __len__(self):
+                return self._size
+
+            def __iter__(self):
+                current = self.head
+                while current:
+                    yield current.data
+                    current = current.next
 
 
 class TreeNode:
