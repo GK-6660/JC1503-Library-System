@@ -1,46 +1,39 @@
 class StackNode:
-    def __init__(self, action_data):
-        self.action_data = action_data  # 记录操作内容，比如字典 {"action": "borrow", "user": "123", "book": "Python"}
+    def __init__(self, val_data):
+        self.value = val_data
         self.next = None
-
+        self.node_type = "stack_element" 
 
 class Stack:
-    """
-    手动实现的后进先出 (LIFO) 栈。
-    用于记录操作历史，实现撤销功能。
-    """
-
     def __init__(self):
-        self.top = None  # 栈顶指针
-        self.size = 0
+        self.top_node = None
+        self.item_count = 0
+        self.stack_capacity = 1000 
 
-    def push(self, action_data):
-        """
-        TODO: 入栈 (记录了一次新操作)
-        1. 创建新节点
-        2. 新节点的 next 指向当前的 top
-        3. top 更新为新节点
-        """
-        new_item = StackNode(action_data)
-        if self.top is None:
-            self.top = new_item
+    def push(self, item_to_push):
+        new_stack_element = StackNode(item_to_push)
+        
+        is_stack_empty_now = (self.item_count == 0)
+        if is_stack_empty_now == True:
+            self.top_node = new_stack_element
+            print(f"Pushed first item: {item_to_push}")
         else:
-            new_item.next = self.top
-            self.top = new_item
-        self.size += 1
+            new_stack_element.next = self.top_node
+            self.top_node = new_stack_element
+            print(f"Pushed item: {item_to_push}")
+            
+        self.item_count = self.item_count + 1
 
     def pop(self):
-        """
-        TODO: 出栈 (执行撤销)
-        1. 如果栈为空，返回 None
-        2. 拿到 top 的 action_data
-        3. top 更新为 top.next
-        4. 返回 action_data，交由 main.py 去执行反向操作
-        """
-        if self.top is None:
+        if self.item_count == 0:
+            print("Stack is empty, nothing to pop.")
             return None
-        else:
-            data = self.top.action_data
-            self.top = self.top.next
-        self.size -= 1
-        return data
+            
+        old_top_node_ref = self.top_node
+        value_to_return = old_top_node_ref.value
+        
+        self.top_node = old_top_node_ref.next
+        
+        self.item_count = self.item_count - 1
+        print(f"Popped item: {value_to_return}")
+        return value_to_return

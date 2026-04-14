@@ -2,226 +2,414 @@ import os
 import sys
 import unittest
 
-# 获取当前文件所在目录 (tests/)
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# 项目根目录是当前目录的上一级 (JC1503-Library-System/)
 project_dir = os.path.dirname(current_dir)
+src_dir = os.path.join(project_dir, "src")
 
-# 将项目根目录添加到路径
 if project_dir not in sys.path:
     sys.path.insert(0, project_dir)
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
 
 try:
     from src.structures.tree import CategoryTree
-    from src.utils.exceptions import (
-        ItemNotFoundError,
-        DuplicateItemError,
-    )
+    from src.models.resource import Book
+    from src.models.user import User
+    
+    exceptions_found = False
+    
+    item_not_found_classes = set()
+    duplicate_item_classes = set()
+    out_of_stock_classes = set()
+
+    try:
+        from utils.exceptions import (
+            ItemNotFoundError as Ex1,
+            DuplicateItemError as Ex2,
+            OutOfStockError as Ex3,
+        )
+        item_not_found_classes.add(Ex1)
+        duplicate_item_classes.add(Ex2)
+        out_of_stock_classes.add(Ex3)
+        exceptions_found = True
+    except ImportError:
+        pass
+
+    try:
+        from src.utils.exceptions import (
+            ItemNotFoundError as Ex1,
+            DuplicateItemError as Ex2,
+            OutOfStockError as Ex3,
+        )
+        item_not_found_classes.add(Ex1)
+        duplicate_item_classes.add(Ex2)
+        out_of_stock_classes.add(Ex3)
+        exceptions_found = True
+    except ImportError:
+        pass
+        
+    if not exceptions_found:
+        raise ImportError("Cannot import utils.exceptions, please check path settings")
+        
+    ItemNotFoundError = tuple(item_not_found_classes)
+    DuplicateItemError = tuple(duplicate_item_classes)
+    OutOfStockError = tuple(out_of_stock_classes)
 
     Exception_available = True
 except ImportError as e:
-    print(f"导入错误: {e}")
-    print(f"当前文件: {__file__}")
-    print(f"项目目录: {project_dir}")
+    print(f"Import Error: {e}")
+    print(f"Current File: {__file__}")
+    print(f"Project Directory: {project_dir}")
     print(f"sys.path: {sys.path}")
     raise
 
 
 class TestCategoryTree(unittest.TestCase):
-    """测试分类树"""
 
     def setUp(self):
-        self.tree = CategoryTree("图书馆")
-        """每个测试前准备"""
+        self.tree = CategoryTree("Library")
 
     def test_add_root_category(self):
-        """测试添加根分类"""
-        result = self.tree.add_category("图书馆", "理科")
+        result = self.tree.add_category("Library", "Science")
         self.assertTrue(result)
         self.assertIsNotNone(self.tree.root)
-        self.assertEqual(self.tree.root.category_name, "理科")
+        self.assertEqual(self.tree.root.category_name, "Library")
+        self.assertIsNotNone(self.tree.find_category("Science"))
 
     def test_add_child_category(self):
-        """测试添加子分类"""
-        self.tree.add_category("图书馆", "理科")
-        self.tree.add_category("理科", "数学")
-        self.tree.add_category("理科", "物理")
+        self.tree.add_category("Library", "Science")
+        self.tree.add_category("Science", "Mathematics")
+        self.tree.add_category("Science", "Physics")
 
-        child_count = len(self.tree.root.children)  # 直接获取列表长度
+        science_node = self.tree.find_category("Science")
+        child_count = len(science_node.children)
         self.assertEqual(child_count, 2)
 
     def test_add_duplicate_category(self):
-        """测试添加重复分类"""
-        self.tree.add_category("图书馆", "理科")
-        self.tree.add_category("理科", "数学")
+        self.tree.add_category("Library", "Science")
+        self.tree.add_category("Science", "Mathematics")
 
         with self.assertRaises(DuplicateItemError):
-            self.tree.add_category("理科", "数学")
+            self.tree.add_category("Science", "Mathematics")
 
     def test_add_category_with_nonexistent_parent(self):
-        """测试添加到不存在的父分类"""
         with self.assertRaises(ItemNotFoundError):
-            self.tree.add_category("不存在的分类", "数学")
+            self.tree.add_category("Nonexistent Category", "Mathematics")
 
     def test_search_category(self):
-        """测试搜索分类"""
-        self.tree.add_category("图书馆", "理科")
-        self.tree.add_category("理科", "数学")
-        self.tree.add_category("数学", "高等数学")
+        self.tree.add_category("Library", "Science")
+        self.tree.add_category("Science", "Mathematics")
+        self.tree.add_category("Mathematics", "Calculus")
 
-        node = self.tree.find_category("理科")
-        self.assertEqual(node.category_name, "理科")
+        node = self.tree.find_category("Science")
+        self.assertEqual(node.category_name, "Science")
 
-        node = self.tree.find_category("数学")
-        self.assertEqual(node.category_name, "数学")
+        node = self.tree.find_category("Mathematics")
+        self.assertEqual(node.category_name, "Mathematics")
 
-        node = self.tree.find_category("高等数学")
-        self.assertEqual(node.category_name, "高等数学")
+        node = self.tree.find_category("Calculus")
+        self.assertEqual(node.category_name, "Calculus")
 
         with self.assertRaises(ItemNotFoundError):
-            self.tree.find_category("化学")
+            self.tree.find_category("Chemistry")
 
     def test_get_path(self):
-        """测试获取分类路径"""
-        self.tree.add_category("图书馆", "理科")
-        self.tree.add_category("理科", "数学")
-        self.tree.add_category("数学", "高等数学")
-        self.tree.add_category("高等数学", "微积分")
+        self.tree.add_category("Library", "Science")
+        self.tree.add_category("Science", "Mathematics")
+        self.tree.add_category("Mathematics", "Calculus")
+        self.tree.add_category("Calculus", "Differentiation")
 
-        path = self.tree.get_path("微积分")
-        self.assertEqual(path, ["图书馆", "理科", "数学", "高等数学", "微积分"])
+        path = self.tree.get_path("Differentiation")
+        self.assertEqual(path, ["Library", "Science", "Mathematics", "Calculus", "Differentiation"])
 
         with self.assertRaises(ItemNotFoundError):
-            self.tree.get_path("不存在的分类")
+            self.tree.get_path("Nonexistent Category")
 
     def test_get_all_categories(self):
-        """测试获取所有分类"""
-        self.tree.add_category("图书馆", "理科")
-        self.tree.add_category("理科", "数学")
-        self.tree.add_category("理科", "物理")
-        self.tree.add_category("图书馆", "文科")
-        self.tree.add_category("文科", "文学")
-        self.tree.add_category("图书馆", "工科")
+        self.tree.add_category("Library", "Science")
+        self.tree.add_category("Science", "Mathematics")
+        self.tree.add_category("Science", "Physics")
+        self.tree.add_category("Library", "Arts")
+        self.tree.add_category("Arts", "Literature")
+        self.tree.add_category("Library", "Engineering")
 
         all_cats = self.tree.get_all_categories()
-        expected_cats = ["图书馆", "理科", "数学", "物理", "文科", "文学", "工科"]
+        expected_cats = ["Library", "Science", "Mathematics", "Physics", "Arts", "Literature", "Engineering"]
         self.assertEqual(len(all_cats), 7)
         for cat in expected_cats:
             self.assertIn(cat, all_cats)
 
     def test_remove_category(self):
-        """测试删除分类"""
-        self.tree.add_category("图书馆", "理科")
-        self.tree.add_category("理科", "数学")
-        self.tree.add_category("数学", "高等数学")
+        self.tree.add_category("Library", "Science")
+        self.tree.add_category("Science", "Mathematics")
+        self.tree.add_category("Mathematics", "Calculus")
 
-        # 删除叶子节点
-        result = self.tree.remove_category("高等数学")
+        result = self.tree.remove_category("Calculus")
         self.assertTrue(result)
         with self.assertRaises(ItemNotFoundError):
-            self.tree.find_category("高等数学")
+            self.tree.find_category("Calculus")
 
-        # 删除非叶子节点
-        result = self.tree.remove_category("数学")
+        result = self.tree.remove_category("Mathematics")
         self.assertTrue(result)
         with self.assertRaises(ItemNotFoundError):
-            self.tree.find_category("数学")
+            self.tree.find_category("Mathematics")
 
-        # 删除不存在的分类
-        result = self.tree.remove_category("不存在的")
+        result = self.tree.remove_category("Nonexistent")
         self.assertFalse(result)
 
     def test_move_category(self):
-        """测试移动分类"""
-        self.tree.add_category("图书馆", "理科")
-        self.tree.add_category("图书馆", "文科")
-        self.tree.add_category("理科", "数学")
+        self.tree.add_category("Library", "Science")
+        self.tree.add_category("Library", "Arts")
+        self.tree.add_category("Science", "Mathematics")
 
-        # 移动数学到文科下
-        result = self.tree.move_category("数学", "文科")
+        result = self.tree.move_category("Mathematics", "Arts")
         self.assertTrue(result)
 
-        path = self.tree.get_path("数学")
-        self.assertEqual(path, ["图书馆", "文科", "数学"])
+        path = self.tree.get_path("Mathematics")
+        self.assertEqual(path, ["Library", "Arts", "Mathematics"])
 
-        # 移动到不存在的父分类
-        result = self.tree.move_category("数学", "不存在的")
+        result = self.tree.move_category("Mathematics", "Nonexistent")
         self.assertFalse(result)
 
     def test_nested_categories_depth(self):
-        """测试深层嵌套分类"""
-        self.tree.add_category("图书馆", "层级1")
-        current = "层级1"
+        self.tree.add_category("Library", "Level1")
+        current = "Level1"
         for i in range(2, 7):
-            name = f"层级{i}"
+            name = f"Level{i}"
             self.tree.add_category(current, name)
             current = name
 
-        # 验证最深层的路径
-        path = self.tree.get_path("层级6")
-        expected = ["图书馆", "层级1", "层级2", "层级3", "层级4", "层级5", "层级6"]
+        path = self.tree.get_path("Level6")
+        expected = ["Library", "Level1", "Level2", "Level3", "Level4", "Level5", "Level6"]
         self.assertEqual(path, expected)
 
 
 class TestResourceModels(unittest.TestCase):
-    """测试资源模型 - 等待组员1完成"""
 
-    def test_placeholder(self):
-        """测试占位"""
-        self.skipTest("等待组员1完成 Resource, Book, Magazine, User 类的实现")
+    def test_book_creation(self):
+        book = Book("B001", "Python Programming", 5, "Guido", "978-0-123456-47-2")
+        self.assertEqual(book.resource_id, "B001")
+        self.assertEqual(book.title, "Python Programming")
+        self.assertEqual(book.total_copies, 5)
+        self.assertEqual(book.available_copies, 5)
+        self.assertEqual(book.author, "Guido")
+
+    def test_borrow_return_flow(self):
+        book = Book("B001", "Python Programming", 2, "Guido", "123")
+        
+        book.borrow_item()
+        self.assertEqual(book.available_copies, 1)
+        
+        book.borrow_item()
+        self.assertEqual(book.available_copies, 0)
+        
+        with self.assertRaises(OutOfStockError):
+            book.borrow_item()
+            
+        book.return_item()
+        self.assertEqual(book.available_copies, 1)
+
+    def test_waitlist(self):
+        book = Book("B001", "Popular Book", 1, "Author", "123")
+        book.borrow_item()
+        
+        book.waitlist.enqueue("User1")
+        book.waitlist.enqueue("User2")
+        
+        notified_user = book.return_item()
+        self.assertEqual(notified_user, "User1")
+        self.assertEqual(book.available_copies, 0)
+        
+        notified_user = book.return_item()
+        self.assertEqual(notified_user, "User2")
+        self.assertEqual(book.available_copies, 0)
+        
+        notified_user = book.return_item()
+        self.assertIsNone(notified_user)
+        self.assertEqual(book.available_copies, 1)
 
 
 class TestLinkedList(unittest.TestCase):
-    """测试双向链表 - 等待组员2完成"""
 
-    def test_placeholder(self):
-        """测试占位"""
-        self.skipTest("等待组员2完成 DoublyLinkedList 的实现")
+    def setUp(self):
+        from src.structures.linked_list import DoublyLinkedList
+        self.dll = DoublyLinkedList()
+
+    def test_append_and_len(self):
+        self.dll.append("A")
+        self.dll.append("B")
+        self.assertEqual(len(self.dll), 2)
+        self.assertEqual(self.dll.to_list(), ["A", "B"])
+
+    def test_remove(self):
+        self.dll.append("A")
+        self.dll.append("B")
+        self.dll.append("C")
+        
+        self.assertTrue(self.dll.remove("B"))
+        self.assertEqual(self.dll.to_list(), ["A", "C"])
+        self.assertEqual(len(self.dll), 2)
+        
+        self.assertTrue(self.dll.remove("A"))
+        self.assertEqual(self.dll.to_list(), ["C"])
+        
+        self.assertTrue(self.dll.remove("C"))
+        self.assertEqual(self.dll.to_list(), [])
+        self.assertEqual(len(self.dll), 0)
+        
+        self.assertFalse(self.dll.remove("X"))
 
 
 class TestStack(unittest.TestCase):
-    """测试栈 - 等待组员2完成"""
 
-    def test_placeholder(self):
-        """测试占位"""
-        self.skipTest("等待组员2完成 Stack 的实现")
+    def setUp(self):
+        from src.structures.stack import Stack
+        self.stack = Stack()
+
+    def test_push_pop(self):
+        self.stack.push("Action1")
+        self.stack.push("Action2")
+        
+        self.assertEqual(self.stack.pop(), "Action2")
+        self.assertEqual(self.stack.pop(), "Action1")
+        self.assertIsNone(self.stack.pop())
 
 
 class TestHashTable(unittest.TestCase):
-    """测试哈希表 - 等待组员3完成"""
 
-    def test_placeholder(self):
-        """测试占位"""
-        self.skipTest("等待组员3完成 HashTable 的实现")
+    def setUp(self):
+        from src.structures.hash_table import HashTable
+        self.ht = HashTable(capacity=10)
+
+    def test_insert_get(self):
+        user = User("U001", "Alice")
+        self.ht.insert("U001", user)
+        
+        retrieved = self.ht.get("U001")
+        self.assertEqual(retrieved.name, "Alice")
+
+    def test_collision(self):
+        user1 = User("AB", "User1")
+        user2 = User("BA", "User2")
+        
+        self.ht.insert("AB", user1)
+        self.ht.insert("BA", user2)
+        
+        self.assertEqual(self.ht.get("AB").name, "User1")
+        self.assertEqual(self.ht.get("BA").name, "User2")
+
+    def test_remove(self):
+        user = User("U001", "Alice")
+        self.ht.insert("U001", user)
+        
+        self.ht.remove("U001")
+        with self.assertRaises(ItemNotFoundError):
+            self.ht.get("U001")
+
+    def test_duplicate_insert(self):
+        user = User("U001", "Alice")
+        self.ht.insert("U001", user)
+        with self.assertRaises(DuplicateItemError):
+            self.ht.insert("U001", user)
 
 
 class TestQueue(unittest.TestCase):
-    """测试队列 - 等待组员3完成"""
 
-    def test_placeholder(self):
-        """测试占位"""
-        self.skipTest("等待组员3完成 Queue 的实现")
+    def setUp(self):
+        from src.structures.queue import Queue
+        self.queue = Queue()
+
+    def test_enqueue_dequeue(self):
+        self.queue.enqueue("User1")
+        self.queue.enqueue("User2")
+        
+        self.assertFalse(self.queue.is_empty())
+        self.assertEqual(self.queue.dequeue(), "User1")
+        self.assertEqual(self.queue.dequeue(), "User2")
+        self.assertTrue(self.queue.is_empty())
 
 
 class TestBST(unittest.TestCase):
-    """测试二叉搜索树 - 等待组员4完成"""
 
-    def test_placeholder(self):
-        """测试占位"""
-        self.skipTest("等待组员4完成 BST 的实现")
+    def setUp(self):
+        from src.structures.bst import BST
+        from src.models.resource import Book
+        self.bst = BST()
+        self.book1 = Book("B1", "Python Basics", 5, "Author A", "ISBN1")
+        self.book2 = Book("B2", "Advanced Python", 3, "Author B", "ISBN2")
+        self.book3 = Book("B3", "Data Structures", 4, "Author C", "ISBN3")
+
+    def test_insert_search(self):
+        self.bst.insert("Python Basics", self.book1)
+        self.bst.insert("Advanced Python", self.book2)
+        
+        found = self.bst.search("Python Basics")
+        self.assertEqual(found.title, "Python Basics")
+        
+        found = self.bst.search("Advanced Python")
+        self.assertEqual(found.title, "Advanced Python")
+        
+        with self.assertRaises(ItemNotFoundError):
+            self.bst.search("Nonexistent Book")
+
+    def test_update_existing(self):
+        self.bst.insert("Python Basics", self.book1)
+        new_book = Book("B1-New", "Python Basics", 10, "Author A", "ISBN1")
+        self.bst.insert("Python Basics", new_book)
+        
+        found = self.bst.search("Python Basics")
+        self.assertEqual(found.total_copies, 10)
 
 
 class TestIntegration(unittest.TestCase):
-    """集成测试 - 等待所有模块完成"""
 
-    def test_placeholder(self):
-        """测试占位"""
-        self.skipTest("等待所有模块完成后进行集成测试")
+    def setUp(self):
+        from src.structures.hash_table import HashTable
+        from src.structures.bst import BST
+        from src.models.user import User
+        from src.models.resource import Book
+        
+        self.users = HashTable()
+        self.books = BST()
+        
+        self.user = User("U001", "Alice")
+        self.users.insert("U001", self.user)
+        
+        self.book = Book("B001", "Python Guide", 2, "Guido", "12345")
+        self.books.insert("Python Guide", self.book)
+
+    def test_borrow_flow(self):
+        user = self.users.get("U001")
+        book = self.books.search("Python Guide")
+        
+        book.borrow_item()
+        user.borrow_book("Python Guide")
+        
+        self.assertEqual(book.available_copies, 1)
+        self.assertIn("Python Guide", user.borrowed_items.to_list())
+        
+        book.borrow_item()
+        user.borrow_book("Python Guide")
+        self.assertEqual(book.available_copies, 0)
+        
+        with self.assertRaises(OutOfStockError):
+            book.borrow_item()
+
+    def test_return_flow(self):
+        user = self.users.get("U001")
+        book = self.books.search("Python Guide")
+        
+        book.borrow_item()
+        user.borrow_book("Python Guide")
+        
+        book.return_item()
+        user.return_book("Python Guide")
+        
+        self.assertEqual(book.available_copies, 2)
+        self.assertNotIn("Python Guide", user.borrowed_items.to_list())
 
 
-# 主测试入口
 def create_test_suite():
-    """创建测试套件"""
     suite = unittest.TestSuite()
 
     loader = unittest.TestLoader()
@@ -243,23 +431,22 @@ def create_test_suite():
 
 
 def run_tests():
-    """运行所有测试"""
     suite = create_test_suite()
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
 
     print(f"\n{'=' * 60}")
-    print(" 测试报告")
+    print(" Test Report")
     print(f"{'=' * 60}")
-    print(f"测试总数: {result.testsRun}")
-    print(f"通过: {result.testsRun - len(result.failures) - len(result.errors)}")
-    print(f"失败: {len(result.failures)}")
-    print(f"错误: {len(result.errors)}")
-    print(f"跳过: {len(result.skipped)}")
+    print(f"Total Tests: {result.testsRun}")
+    print(f"Passed: {result.testsRun - len(result.failures) - len(result.errors)}")
+    print(f"Failed: {len(result.failures)}")
+    print(f"Errors: {len(result.errors)}")
+    print(f"Skipped: {len(result.skipped)}")
     print(f"{'=' * 60}")
 
     if result.skipped:
-        print("\n 跳过的测试（等待其他组员）：")
+        print("\n Skipped Tests (Waiting for other team members):")
         for test, reason in result.skipped:
             print(f"  - {test}: {reason}")
 

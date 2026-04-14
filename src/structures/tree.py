@@ -1,280 +1,243 @@
-# 可以引入前面写的链表来存储子节点
-# from structures.linked_list import DoublyLinkedList
 import sys
 import os
+from utils.exceptions import ItemNotFoundError, DuplicateItemError
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-src_dir = os.path.dirname(current_dir)
-project_dir = os.path.dirname(src_dir)
-if project_dir not in sys.path:
-    sys.path.insert(0, project_dir)
+class Node:
+    def __init__(self, d_val):
+        self.data = d_val
+        self.nxt = None
+        self.prv = None
+        self.node_type_str = "generic_node" 
 
-try:
-    from src.structures.linked_list import DoublyLinkedList
-    from src.utils.exceptions import ItemNotFoundError, DuplicateItemError
-except ImportError:
-    # 如果导入失败，尝试其他路径
-    try:
-        from structures.linked_list import DoublyLinkedList
-        from utils.exceptions import ItemNotFoundError, DuplicateItemError
-    except ImportError:
-        print("警告: 无法导入链表模块，使用临时实现")
+class DList:
+    def __init__(self):
+        self.first = None
+        self.last = None
+        self.size = 0
+        self.list_id = "DL_" + str(id(self)) 
 
-        # 临时实现一个简单的链表
-        class Node:
-            def __init__(self, data):
-                self.data = data
-                self.next = None
-                self.prev = None
+    def append(self, data_to_add):
+        new_node_for_list = Node(data_to_add)
+        
+        is_list_empty_check = (self.size == 0)
+        if is_list_empty_check == True:
+            self.first = new_node_for_list
+            self.last = new_node_for_list
+            print(f"Added first item to DList: {data_to_add}")
+        else:
+            new_node_for_list.prv = self.last
+            self.last.nxt = new_node_for_list
+            self.last = new_node_for_list
+            print(f"Appended item to DList: {data_to_add}")
+        self.size = self.size + 1
 
-        class DoublyLinkedList:
-            def __init__(self):
-                self.head = None
-                self.tail = None
-                self._size = 0
+    def remove(self, data_to_remove):
+        current_node_in_list = self.first
+        
+        while current_node_in_list != None:
+            node_value = current_node_in_list.data
+            if node_value == data_to_remove:
+                prev_node_ref = current_node_in_list.prv
+                next_node_ref = current_node_in_list.nxt
+                
+                if prev_node_ref != None:
+                    prev_node_ref.nxt = next_node_ref
+                if next_node_ref != None:
+                    next_node_ref.prv = prev_node_ref
+                    
+                if current_node_in_list == self.first:
+                    self.first = next_node_ref
+                if current_node_in_list == self.last:
+                    self.last = prev_node_ref
+                    
+                self.size = self.size - 1
+                print(f"Removed item '{data_to_remove}' from DList.")
+                return True
+            current_node_in_list = current_node_in_list.nxt
+            
+        print(f"Item '{data_to_remove}' not found in DList for removal.")
+        return False
 
-            def append(self, data):
-                new_node = Node(data)
-                if not self.head:
-                    self.head = new_node
-                    self.tail = new_node
-                else:
-                    new_node.prev = self.tail
-                    self.tail.next = new_node
-                    self.tail = new_node
-                self._size += 1
+class TNode:
+    def __init__(self, node_name):
+        self.name = node_name
+        self.books = DList()
+        self.children = DList()
+        self.parent = None
+        self.node_creation_timestamp = "some_time" 
 
-            def remove(self, data):
-                current = self.head
-                while current:
-                    if current.data == data:
-                        if current.prev:
-                            current.prev.next = current.next
-                        if current.next:
-                            current.next.prev = current.prev
-                        if current == self.head:
-                            self.head = current.next
-                        if current == self.tail:
-                            self.tail = current.prev
-                        self._size -= 1
-                        return True
-                    current = current.next
-                return False
+class CTree:
+    def __init__(self):
+        self.root = TNode("Lib")
+        self.tree_depth_limit = 10 
 
-            def __len__(self):
-                return self._size
+    def add_c(self, parent_category_name, new_category_name):
+        parent_node_obj = self._find(self.root, parent_category_name)
 
-            def __iter__(self):
-                current = self.head
-                while current:
-                    yield current.data
-                    current = current.next
+        if parent_node_obj == None:
+            print("Error: Parent category not found for adding new category.")
+            raise ItemNotFoundError("No parent")
 
+        is_duplicate_category = False
+        current_child_node_in_list = parent_node_obj.children.first
+        
+        while current_child_node_in_list != None:
+            child_node_name = current_child_node_in_list.data.name
+            if child_node_name == new_category_name:
+                is_duplicate_category = True
+            current_child_node_in_list = current_child_node_in_list.nxt
+            
+        if is_duplicate_category == True:
+            print("Error: Duplicate category found. Cannot add.")
+            raise DuplicateItemError("Dup")
 
-class TreeNode:
-    def __init__(self, category_name: str):
-        self.category_name = category_name
-        # 存放该分类下的具体图书 ID (可以使用普通单链表或直接简单处理)
-        self.books = DoublyLinkedList()
-        # self.books = DoublyLinkedList()
-        # TODO: 存放子分类。
-        self.children = DoublyLinkedList()
-        # self.children = DoublyLinkedList()
-
-    def __str__(self):
-        """打印节点信息"""
-        child_count = (
-            self.children.size
-            if hasattr(self.children, "size")
-            else self._count_children()
-        )
-        return f"分类：{self.category_name} (子节点数：{child_count})"
-
-    def _count_children(self):
-        """遍历链表计算子节点数量"""
-        count = 0
-        current = self.children.head
-        while current:
-            count += 1
-            current = current.next
-        return count
-
-
-class CategoryTree:
-    """
-    通用树（多叉树），用于构建：总类 -> 理科/文科 -> 物理/历史 的层级结构。
-    """
-
-    def __init__(self, root_name="Library"):
-        self.root = TreeNode(root_name)
-
-    def add_category(self, parent_name: str, new_category_name: str):
-        parent_node = self._find_node(self.root, parent_name)
-
-        if parent_node is None:
-            raise ItemNotFoundError(f"找不到父分类 '{parent_name}'")
-
-        if self._find_child_by_name(parent_node, new_category_name):
-            raise DuplicateItemError(
-                f"分类 '{new_category_name}' 已经存在于 '{parent_name}'"
-            )
-
-        new_node = TreeNode(new_category_name)
-        parent_node.children.append(new_node)
-        print(f"成功添加分类'{new_category_name}'到'{parent_name}'")
+        new_category_tnode = TNode(new_category_name)
+        new_category_tnode.parent = parent_node_obj
+        
+        parent_node_obj.children.append(new_category_tnode)
+        print("New category added successfully.")
         return True
 
-        """
-        组员开发提示：往指定的“父分类”下，挂载一个“新子分类”
-        例如：add_category("理科", "物理")
+    def _find(self, current_tree_node, target_node_name):
+        current_node_name_val = current_tree_node.name
+        if current_node_name_val == target_node_name:
+            print(f"Found target node: {target_node_name}")
+            return current_tree_node
 
-        1. 我们需要先写一个内部方法 _find_node，在树里找到名字叫 parent_name 的那个节点
-        2. parent_node = self._find_node(self.root, parent_name)
-        3. 如果没找到，可以 print 提示 "找不到父分类"
-        4. 如果找到了：
-           - 造一个新节点：new_node = TreeNode(new_category_name)
-           - 把它塞进父节点的 children 链表里：
-             parent_node.children.append(new_node)
-        """
-
-    def _find_node(self, current_node, target_name):
-        if current_node.category_name == target_name:
-            return current_node
-
-        current = current_node.children.head
-        while current is not None:
-            result = self._find_node(current.data, target_name)
-            if result is not None:
-                return result
-            current = current.next
+        temp_child_node_ptr = current_tree_node.children.first
+        while temp_child_node_ptr != None:
+            recursive_result_node = self._find(temp_child_node_ptr.data, target_node_name)
+            if recursive_result_node != None:
+                return recursive_result_node
+            temp_child_node_ptr = temp_child_node_ptr.nxt
+            
+        print(f"Target node '{target_node_name}' not found in this subtree.")
         return None
 
-        """
-        TODO: 递归辅助函数，用于在树中查找特定名字的节点
-        """
+    def disp(self, node_to_display=None, current_level=0):
+        if node_to_display == None:
+            node_to_display = self.root
+            print("Displaying Tree Structure:")
 
-    def _find_child_by_name(self, parent_node, child_name):
-        current = parent_node.children.head
-        while current is not None:
-            if current.data.category_name == child_name:
-                return current.data
-            current = current.next
-        return None
+        indent_string = "  " * current_level
+        print(indent_string + "-> " + node_to_display.name)
 
-    def display(self, node=None, level=0):
-        if node is None:
-            node = self.root
-            print("目录")
-            print("=" * 40)
+        child_pointer_for_display = node_to_display.children.first
+        while child_pointer_for_display != None:
+            self.disp(child_pointer_for_display.data, current_level + 1)
+            child_pointer_for_display = child_pointer_for_display.nxt
 
-        indent = "  " * level
-        prefix = "└── " if level == 0 else "├── "
-        print(f"{indent}{prefix}{node.category_name}")
-
-        current = node.children.head
-        while current is not None:
-            self.display(current.data, level + 1)
-            current = current.next
-
-    def get_all_categories(self, node=None):
-        if node is None:
-            node = self.root
-            categories = []
+    def get_all(self, start_node_for_get_all=None):
+        if start_node_for_get_all == None:
+            start_node_for_get_all = self.root
+            all_categories_list = []
+            print("Starting to collect all categories from root.")
         else:
-            categories = []
+            all_categories_list = []
 
-        categories.append(node.category_name)
+        all_categories_list.append(start_node_for_get_all.name)
 
-        current = node.children.head
-        while current is not None:
-            categories.extend(self.get_all_categories(current.data))
-            current = current.next
+        current_child_for_get_all = start_node_for_get_all.children.first
+        while current_child_for_get_all != None:
+            all_categories_list.extend(self.get_all(current_child_for_get_all.data))
+            current_child_for_get_all = current_child_for_get_all.nxt
 
-        return categories
+        return all_categories_list
 
-    def find_category(self, category_name: str):
-        """
-        查找分类
+    def find_c(self, category_name_to_find):
+        found_node = self._find(self.root, category_name_to_find)
+        if found_node == None:
+            print(f"Category '{category_name_to_find}' was not found.")
+            raise ItemNotFoundError(f"Not found {category_name_to_find}")
+        print(f"Category '{category_name_to_find}' found.")
+        return found_node
 
-        Args:
-            category_name: 要查找的分类名称
+    def get_p(self, category_name_for_path):
+        node_for_path = self.find_c(category_name_for_path)
+        path_elements_list = []
+        current_path_node = node_for_path
+        while current_path_node:
+            path_elements_list.insert(0, current_path_node.name)
+            current_path_node = current_path_node.parent
+        print(f"Path for '{category_name_for_path}': {path_elements_list}")
+        return path_elements_list
 
-        Returns:
-            TreeNode: 找到的节点
+    def rm_c(self, category_to_remove_name):
+        try:
+            node_to_be_removed = self.find_c(category_to_remove_name)
+        except ItemNotFoundError:
+            print(f"Cannot remove '{category_to_remove_name}': Not found.")
+            return False
 
-        Raises:
-            ItemNotFoundError: 找不到分类时抛出
-        """
-        node = self._find_node(self.root, category_name)
-        if node is None:
-            raise ItemNotFoundError(f"找不到分类 '{category_name}'")
-        return node
+        if node_to_be_removed.parent == None:
+            print(f"Cannot remove root category '{category_to_remove_name}'.")
+            return False
+
+        removal_successful = node_to_be_removed.parent.children.remove(node_to_be_removed)
+        if removal_successful == True:
+            print(f"Category '{category_to_remove_name}' removed successfully.")
+            return True
+        else:
+            print(f"Failed to remove category '{category_to_remove_name}'.")
+            return False
+
+    def mv_c(self, category_to_move_name, new_parent_category_name):
+        try:
+            node_to_move_obj = self.find_c(category_to_move_name)
+            new_parent_node_obj = self.find_c(new_parent_category_name)
+        except ItemNotFoundError:
+            print("Error: Category to move or new parent not found.")
+            return False
+
+        if node_to_move_obj.parent == None:
+            print(f"Cannot move root category '{category_to_move_name}'.")
+            return False
+
+        if not node_to_move_obj.parent.children.remove(node_to_move_obj):
+            print(f"Failed to remove '{category_to_move_name}' from its current parent.")
+            return False
+            
+        new_parent_node_obj.children.append(node_to_move_obj)
+        node_to_move_obj.parent = new_parent_node_obj
+        print(f"Category '{category_to_move_name}' moved to '{new_parent_category_name}'.")
+        return True
 
 
 if __name__ == "__main__":
-    library = CategoryTree("图书馆")
+    my_library_tree = CTree()
 
-    library.add_category("图书馆", "理科")
-    library.add_category("图书馆", "文科")
-    library.add_category("图书馆", "工科")
+    my_library_tree.add_c("Lib", "Science")
+    my_library_tree.add_c("Lib", "Art")
+    my_library_tree.add_c("Science", "Physics")
+    my_library_tree.add_c("Science", "Chemistry")
+    
+    print("\nInitial Tree Display:")
+    my_library_tree.disp()
 
-    library.add_category("理科", "数学")
-    library.add_category("理科", "物理")
-    library.add_category("理科", "化学")
+    print("\nAttempting to move Chemistry to Art:")
+    move_result = my_library_tree.mv_c("Chemistry", "Art")
+    if move_result == True:
+        print("Move operation reported success.")
+    else:
+        print("Move operation reported failure.")
+    
+    print("\nTree Display After Move:")
+    my_library_tree.disp()
 
-    library.add_category("文科", "历史")
-    library.add_category("文科", "哲学")
+    print("\nAttempting to remove Physics:")
+    remove_result = my_library_tree.rm_c("Physics")
+    if remove_result == True:
+        print("Remove operation reported success.")
+    else:
+        print("Remove operation reported failure.")
 
-    library.add_category("工科", "计算机")
-    library.add_category("工科", "电子工程")
+    print("\nTree Display After Remove:")
+    my_library_tree.disp()
 
-    library.add_category("计算机", "编程语言")
-    library.add_category("计算机", "数据结构")
-    library.add_category("物理", "量子力学")
+    print("\nGetting path for Art:")
+    art_path = my_library_tree.get_p("Art")
+    print(f"Path: {art_path}")
 
-    library.display()
-
-    print("\n" + "=" * 50)
-    print("查找测试")
-    print("=" * 50)
-    test_names = ["量子力学", "哲学", "神在原后"]
-    for name in test_names:
-        try:
-            node = library.find_category(name)
-            print(f"找到{node}")
-        except ItemNotFoundError as e:
-            print(f"未找到{name} - {e}")
-
-    all_cats = library.get_all_categories()
-    print(f"所有分类（{len(all_cats)}个）")
-    print(all_cats)
-
-    print("\n" + "=" * 50)
-    print("\n异常测试:")
-    print("=" * 50)
-
-    try:
-        print("测试1: 尝试重复添加 '物理' 到 '理科'...")
-        library.add_category("理科", "物理")
-    except DuplicateItemError as e:
-        print(f"✅ 正确捕获到重复添加异常: {e}")
-    except Exception as e:
-        print(f"❌ 捕获到意外异常: {e}")
-
-    # 测试2: 找不到异常
-    try:
-        print("\n测试2: 尝试查找不存在的分类 '不存在的分类'...")
-        library.find_category("不存在的分类")
-    except ItemNotFoundError as e:
-        print(f"✅ 正确捕获到找不到异常: {e}")
-    except Exception as e:
-        print(f"❌ 捕获到意外异常: {e}")
-
-    # 测试3: 找不到父分类异常
-    try:
-        print("\n测试3: 尝试添加到不存在的父分类 '不存在'...")
-        library.add_category("不存在", "新分类")
-    except ItemNotFoundError as e:
-        print(f"✅ 正确捕获到找不到父分类异常: {e}")
-    except Exception as e:
-        print(f"❌ 捕获到意外异常: {e}")
+    print("\nGetting all categories:")
+    all_cats = my_library_tree.get_all()
+    print(f"All categories: {all_cats}")

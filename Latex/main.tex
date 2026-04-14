@@ -1,0 +1,127 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs} % For professional tables
+\usepackage{listings} % For code snippets
+\usepackage{xcolor}
+
+% --- Python Code Styling ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{codegreen},
+    stringstyle=\color{orange},
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    frame=single
+}
+
+% --- Title Information ---
+\title{JC1503: Object-Oriented Programming \\ \huge Group Project: Personal Data System}
+\author{Group [Insert Group Number]}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% --- Requirement: Individual Contributions on First Page ---
+\section*{Individual Contributions}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{lp{6cm}p{5cm}}
+        \toprule
+        \textbf{Member Name} & \textbf{Responsibilities} & \textbf{Technical Implementation} \\
+        \midrule
+        Student 1 & e.g., System Architecture & e.g., BST, Inheritance structure \\
+        Student 2 & e.g., Data Persistence & e.g., File I/O, Hash Table \\
+        Student 3 & e.g., Testing \& Debugging & e.g., Unit tests, Custom Exceptions \\
+        Student 4 & e.g., UI \& Operations & e.g., Search/Delete logic \\
+        \bottomrule
+    \end{tabular}
+    \caption{Summary of individual member responsibilities.}
+\end{table}
+
+\vfill
+\begin{center}
+    \textit{Note: Total report length must not exceed 10 pages.}
+\end{center}
+\newpage
+
+% --- Section 1: Problem and System Design ---
+\section{Problem and System Design}
+\label{sec:problem_design}
+% Requirement: Real-world situation, main entities, and system structure.
+
+\subsection{Application Domain}
+Describe your chosen scenario (e.g., Hospital Records, Finance Tracker) and the real-world problem it manages.
+
+\subsection{System Architecture}
+Explain the overall structure and how the user interacts with the application. Justify why this is a coherent system rather than a script.
+
+% --- Section 2: Technical Design ---
+\section{Technical Design}
+\label{sec:technical_design}
+% Requirement: OOP structure, Data Structures, and Algorithms.
+
+\subsection{Object-Oriented Modelling}
+Explain your use of:
+\begin{itemize}
+    \item \textbf{Inheritance and Abstraction:} (e.g., Base classes for records).
+    \item \textbf{Composition:} How objects relate to one another.
+    \item \textbf{Encapsulation \& Polymorphism:}.
+\end{itemize}
+
+\subsection{Data Structures and Algorithms}
+Justify the use of the following required structures :
+\begin{itemize}
+    \item \textbf{Linear Structures:} Doubly Linked List, Stack, and Queue.
+    \item \textbf{Non-Linear Structures:} Tree and Binary Search Tree (BST) including recursive traversal.
+    \item \textbf{Mapping:} Hash Table / Map structure.
+\end{itemize}
+
+\subsection{Efficiency and Complexity}
+Discuss the algorithmic reasoning and complexity considerations for your search/query operations.
+
+% --- Section 3: Development and Testing ---
+\section{Development and Testing}
+\label{sec:dev_testing}
+% Requirement: Evolution, problems encountered, and testing evidence.
+
+\subsection{Iterative Development}
+Describe how the system evolved from the initial dataset generation to the final persistent state.
+
+\subsection{Problem Solving}
+Detail at least one significant technical problem encountered, how you diagnosed it, and the fix applied.
+
+\subsection{Testing Strategy}
+Provide evidence of:
+\begin{itemize}
+    \item \textbf{Unit Testing:} Individual methods.
+    \item \textbf{System Testing:} End-to-end functionality.
+\end{itemize}
+
+% --- Section 4: Reflection ---
+\section{Reflection}
+\label{sec:reflection}
+% Requirement: Successes, limitations, and learning outcomes.
+
+\subsection{Critical Assessment}
+What aspects of the design work well? What are the current limitations (e.g., scalability of specific data structures)?
+
+\subsection{Future Improvements}
+If you had more time, what would you change or extend?
+
+\subsection{Learning Outcomes}
+Reflect on what the group learned about software design and OOP principles.
+
+\end{document}

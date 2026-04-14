@@ -5,252 +5,237 @@ from structures.bst import BST
 from structures.stack import Stack
 from models.user import User
 from models.resource import Book, Magazine
-from utils.exceptions import DuplicateItemError, ItemNotFoundError, OutOfStockError
+from utils.exceptions import LibraryBaseException, ItemNotFoundError, DuplicateItemError, OutOfStockError
 
-
-class LibrarySystem:
+class LibSys:
     def __init__(self):
-        # 1. 系统启动，加载数据
-        print("正在加载系统数据...")
+        print("Loading...")
         self.users, self.books = Storage.load_data()
-
-        # 2. 初始化撤销栈
         self.history_stack = Stack()
+        
+        self.is_running = True
+        self.temp_counter = 0
 
     def run(self):
-        """主循环，CLI 交互界面"""
-        while True:
+        is_system_active = self.is_running
+        while is_system_active == True:
+            self.temp_counter = self.temp_counter + 1 
             self.print_menu()
-            choice = input("请输入操作编号: ").strip()
-
-            if choice == "1":
-                self.handle_add_user()
-            elif choice == "2":
-                self.handle_add_book()
-            elif choice == "3":
-                self.handle_borrow()
-            elif choice == "4":
-                self.handle_return()
-            elif choice == "5":
-                self.handle_undo()
-            elif choice == "0":
+            user_input_choice = input("Enter choice: ").strip()
+            
+            if user_input_choice == "1":
+                self.add_user()
+            elif user_input_choice == "2":
+                self.add_book()
+            elif user_input_choice == "3":
+                self.borrow_item()
+            elif user_input_choice == "4":
+                self.return_item()
+            elif user_input_choice == "5":
+                self.undo_last_action()
+            elif user_input_choice == "6":
+                self.show_history()
+            elif user_input_choice == "0":
                 self.exit_system()
+                is_system_active = False 
             else:
-                print("无效输入，请重新选择！")
+                print("Wrong choice!")
 
     def print_menu(self):
         print("\n" + "=" * 30)
-        print("  JC1503 图书管理系统  ")
+        print("  Library System  ")
         print("=" * 30)
-        print("1. 添加用户")
-        print("2. 录入新书")
-        print("3. 借阅图书")
-        print("4. 归还图书")
-        print("5. 撤销上一步操作 (Undo)")
-        print("0. 保存并退出")
+        print("1. Add user")
+        print("2. Add book")
+        print("3. Borrow book")
+        print("4. Return book")
+        print("5. Undo")
+        print("6. Show History")
+        print("0. Exit")
         print("=" * 30)
 
-    def handle_add_user(self):
-        """
-        TODO: 处理添加用户逻辑
-        1. input() 获取用户 ID 和姓名
-        2. 创建 User 对象
-        3. self.users.insert(user_id, user_obj)
-        4. 记录这次操作到 self.history_stack.push(...)
-        """
-        user_id = input("请输入新用户学号/ID: ")
-        name = input("请输入用户姓名: ")
+    def add_user(self):
+        user_id_input = input("ID: ")
+        user_name_input = input("Name: ")
         
-        if not user_id or not name:
-             print("ID 和姓名不能为空！")
+        if user_id_input == "" or user_name_input == "":
+             print("Empty input! Try again.")
              return
 
-        try:
-            user = User(user_id, name)
-            self.users.insert(user_id, user)
-            self.history_stack.push({"action": "add_user", "user_id": user_id})
-            print(f"用户 {name} 添加成功！")
-        except DuplicateItemError as e:
-            print(f"错误: {e}")
+        new_user_obj = User(user_id_input, user_name_input)
+        self.users.insert(user_id_input, new_user_obj)
+        self.history_stack.push({"action_type": "add_user", "user_id": user_id_input})
+        print("User added ok!")
 
-    def handle_add_book(self):
-        print("请选择资源类型: 1. 图书 (Book)  2. 杂志 (Magazine)")
-        type_choice = input("请输入类型编号: ").strip()
+    def add_book(self):
+        item_type_choice_str = input("1. Book  2. Mag: ").strip()
         
-        resource_id = input("请输入资源ID: ")
-        title = input("请输入标题: ")
-        try:
-            total_copies = int(input("请输入总册数: "))
-        except ValueError:
-            print("册数必须是整数！")
-            return
+        resource_id_val = input("ID: ")
+        item_title_val = input("Title: ")
+        total_copies_num = int(input("Total: "))
             
-        if type_choice == "1":
-            author = input("请输入作者: ")
-            isbn = input("请输入ISBN: ")
-            item = Book(resource_id, title, total_copies, author, isbn)
-        elif type_choice == "2":
-            issue_number = input("请输入刊号: ")
-            item = Magazine(resource_id, title, total_copies, issue_number)
+        if item_type_choice_str == "1":
+            book_author_name = input("Author: ")
+            book_isbn_code = input("ISBN: ")
+            new_item_obj = Book(resource_id_val, item_title_val, total_copies_num, book_author_name, book_isbn_code)
+        elif item_type_choice_str == "2":
+            magazine_issue_num = input("Issue: ")
+            new_item_obj = Magazine(resource_id_val, item_title_val, total_copies_num, magazine_issue_num)
         else:
-            print("无效的类型选择！")
+            print("Invalid type. No item added.")
             return
 
-        self.books.insert(title, item)
-        self.history_stack.push({"action": "add_book", "title": title})
-        print(f"资源 '{title}' 添加成功！")
+        self.books.insert(item_title_val, new_item_obj)
+        self.history_stack.push({"action_type": "add_book", "item_title": item_title_val})
+        print("Item added successfully!")
 
-    def handle_borrow(self):
-        """
-        TODO: 借书核心逻辑
-        1. input() 获取 user_id 和 book_title
-        2. 从 self.users (哈希表) 里 get 用户对象
-        3. 从 self.books (BST) 里 search 书籍对象
-        4. 调用书的 book.borrow_item()
-        5. 调用用户的 user.borrow_book()
-        6. 注意使用 try...except 捕获他们抛出的异常并打印友好提示！
-        """
-        user_id = input("请输入用户ID: ")
-        book_title = input("请输入书名: ")
+    def borrow_item(self):
+        user_id_to_borrow = input("User ID: ")
+        item_title_to_borrow = input("Title: ")
         
         try:
-            user = self.users.get(user_id)
-            book = self.books.search(book_title)
+            current_user_obj = self.users.get(user_id_to_borrow)
+            current_book_node = self.books.search(item_title_to_borrow)
+            current_book_obj = current_book_node.value
             
-            book.borrow_item()
-            user.borrow_book(book_title)
+            current_book_obj.borrow_item()
+            current_user_obj.borrow_book(item_title_to_borrow)
             
             self.history_stack.push({
-                "action": "borrow", 
-                "user_id": user_id, 
-                "book_title": book_title
+                "action_type": "borrow", 
+                "user_id": user_id_to_borrow, 
+                "item_title": item_title_to_borrow
             })
-            print(f"用户 {user.name} 成功借阅 '{book.title}'！")
+            print("Borrow operation successful!")
             
-        except ItemNotFoundError as e:
-            print(f"错误: {e}")
         except OutOfStockError as e:
-            print(f"错误: {e}")
-            choice = input("库存不足，是否加入预约队列？(y/n): ").strip().lower()
-            if choice == 'y':
+            print(f"Error: {e}. Item is out of stock.")
+            user_answer_queue = input("Do you want to join the waitlist? (y/n): ").strip()
+            if user_answer_queue == 'y':
                 try:
-                    # In case book wasn't assigned (unlikely given the flow)
-                    if 'book' in locals():
-                        book.waitlist.enqueue(user_id)
-                        print("已加入预约队列。")
-                except Exception as ex:
-                    print(f"加入队列失败: {ex}")
+                    book_for_queue = self.books.search(item_title_to_borrow) 
+                    book_for_queue.waitlist.enqueue(user_id_to_borrow)
+                    print("You have been added to the waitlist.")
+                except ItemNotFoundError:
+                    print("Could not add to waitlist, item not found.")
+        except ItemNotFoundError as e:
+            print(f"Error: {e}. User or item not found.")
 
-    def handle_return(self):
-        # TODO: 实现还书逻辑
-        user_id = input("请输入用户ID: ")
-        book_title = input("请输入书名: ")
+    def return_item(self):
+        user_id_return = input("User ID: ")
+        item_title_return = input("Title: ")
         
         try:
-            user = self.users.get(user_id)
-            book = self.books.search(book_title)
+            current_user_for_return = self.users.get(user_id_return)
+            current_book_node = self.books.search(item_title_return)
+            current_book_for_return = current_book_node.value
             
-            if user.return_book(book_title):
-                next_user_id = book.return_item()
-                print(f"用户 {user.name} 成功归还 '{book.title}'！")
+            return_successful = current_user_for_return.return_book(item_title_return)
+            if return_successful == True: 
+                next_borrower_id_from_queue = current_book_for_return.return_item()
+                print("Item returned successfully!")
                 
-                if next_user_id:
-                    print(f"注意：书籍已自动借给预约队列中的用户 {next_user_id}！")
+                if next_borrower_id_from_queue != None: 
+                    print(f"Book given to new user: {next_borrower_id_from_queue}!")
                     try:
-                        next_user = self.users.get(next_user_id)
-                        next_user.borrow_book(book_title)
-                    except ItemNotFoundError:
-                        print(f"警告: 预约用户 {next_user_id} 未找到，无法更新其借阅记录。")
+                        next_user_from_queue = self.users.get(next_borrower_id_from_queue)
+                        next_user_from_queue.borrow_book(item_title_return)
+                    except LibraryBaseException:
+                        print("Error giving book to next user.")
+                        pass
                         
                 self.history_stack.push({
-                    "action": "return", 
-                    "user_id": user_id, 
-                    "book_title": book_title
+                    "action_type": "return", 
+                    "user_id": user_id_return, 
+                    "item_title": item_title_return
                 })
             else:
-                print("归还失败，该用户未借阅此书。")
+                print("User did not borrow this item.")
 
-        except ItemNotFoundError as e:
-            print(f"错误: {e}")
+        except ItemNotFoundError:
+            print("Error: User or item not found for return.")
 
-    def handle_undo(self):
-        """
-        TODO: self.history_stack.pop() 拿到上一步动作，然后反向执行
-        """
-        action_data = self.history_stack.pop()
-        if not action_data:
-            print("没有可以撤销的操作。")
+    def undo_last_action(self):
+        last_action_data = self.history_stack.pop()
+        if last_action_data == None:
+            print("No actions to undo in history.")
             return
         
-        action_type = action_data.get("action")
-        print(f"正在撤销操作: {action_type}")
+        action_type_to_undo = last_action_data.get("action_type")
         
         try:
-            if action_type == "add_user":
-                user_id = action_data["user_id"]
-                self.users.remove(user_id)
-                print(f"撤销成功：用户 {user_id} 已删除。")
+            if action_type_to_undo == "add_user":
+                user_id_to_remove = last_action_data["user_id"]
+                self.users.remove(user_id_to_remove)
+                print(f"User {user_id_to_remove} removed as part of undo.")
                 
-            elif action_type == "add_book":
-                # Remove book - BST remove implemented
-                title = action_data["title"]
-                self.books.remove(title)
-                print(f"撤销成功：书籍 '{title}' 已删除。")
+            elif action_type_to_undo == "add_book":
+                item_title_to_remove = last_action_data["item_title"]
+                self.books.remove(item_title_to_remove)
+                print(f"Book {item_title_to_remove} removed as part of undo.")
                 
-            elif action_type == "borrow":
-                # Undo borrow -> Return book
-                user_id = action_data["user_id"]
-                book_title = action_data["book_title"]
+            elif action_type_to_undo == "borrow":
+                user_id_undo_borrow = last_action_data["user_id"]
+                item_title_undo_borrow = last_action_data["item_title"]
                 
-                user = self.users.get(user_id)
-                book = self.books.search(book_title)
+                user_obj_undo = self.users.get(user_id_undo_borrow)
+                book_obj_undo = self.books.search(item_title_undo_borrow)
                 
-                # Logic similar to handle_return but without user input
-                if user.return_book(book_title):
-                    next_user_id = book.return_item()
-                    print(f"撤销借阅成功：书 '{book_title}' 已归还。")
-                    if next_user_id:
-                        print(f"书籍自动流转给预约用户: {next_user_id}")
+                if user_obj_undo.return_book(item_title_undo_borrow):
+                    next_borrower_after_undo = book_obj_undo.return_item()
+                    print("Borrow action undone.")
+                    if next_borrower_after_undo:
                         try:
-                            next_user = self.users.get(next_user_id)
-                            next_user.borrow_book(book_title)
-                        except ItemNotFoundError:
+                            next_user_obj_after_undo = self.users.get(next_borrower_after_undo)
+                            next_user_obj_after_undo.borrow_book(item_title_undo_borrow)
+                        except LibraryBaseException:
+                            print("Error re-assigning book after undo.")
                             pass
                 else:
-                    print("撤销失败：用户未借阅此书？数据可能不一致。")
+                    print("Failed to undo borrow, user did not have item.")
 
-            elif action_type == "return":
-                # Undo return -> Borrow book
-                user_id = action_data["user_id"]
-                book_title = action_data["book_title"]
+            elif action_type_to_undo == "return":
+                user_id_undo_return = last_action_data["user_id"]
+                item_title_undo_return = last_action_data["item_title"]
                 
-                user = self.users.get(user_id)
-                book = self.books.search(book_title)
+                user_obj_undo_return = self.users.get(user_id_undo_return)
+                book_obj_undo_return = self.books.search(item_title_undo_return)
                 
-                # Check if book is available
-                # If return triggered a lend to waitlist, book.available_copies might be 0
-                # But we want to force borrow back to original user?
-                # This is complex. We will try normal borrow.
-                try:
-                    book.borrow_item()
-                    user.borrow_book(book_title)
-                    print(f"撤销归还成功：书 '{book_title}' 已重新借给 {user.name}。")
-                except OutOfStockError:
-                    print("撤销失败：书籍库存不足（可能已借给预约者）。")
+                book_obj_undo_return.borrow_item()
+                user_obj_undo_return.borrow_book(item_title_undo_return)
+                print("Return action undone.")
 
-            else:
-                print(f"未知操作类型: {action_type}")
-                
-        except Exception as e:
-            print(f"撤销操作时发生错误: {e}")
+        except LibraryBaseException as error_msg:
+            print(f"An error occurred during undo: {error_msg}")
+
+    def show_history(self):
+        print("\n--- Operation History (Most Recent First) ---")
+        if self.history_stack.item_count == 0:
+            print("No operations recorded yet.")
+            return
+        
+        temp_history_list = []
+        temp_stack = Stack() 
+        
+        while self.history_stack.item_count > 0:
+            action = self.history_stack.pop()
+            temp_history_list.append(action)
+            temp_stack.push(action) 
+            
+        while temp_stack.item_count > 0:
+            self.history_stack.push(temp_stack.pop())
+
+        for i, action_data in enumerate(reversed(temp_history_list)):
+            print(f"{i+1}. Type: {action_data.get('action_type')}, Details: {action_data}")
+        print("---------------------------------------------")
 
     def exit_system(self):
-        print("正在保存数据...")
+        print("Exiting system now.")
+        print("Saving all current data to storage...")
         Storage.save_data(self.users, self.books)
-        print("数据已保存，系统退出。再见！")
+        print("Data saved. Goodbye!")
         sys.exit(0)
 
-
 if __name__ == "__main__":
-    system = LibrarySystem()
-    system.run()
+    app = LibSys()
+    app.run()

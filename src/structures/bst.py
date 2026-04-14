@@ -1,121 +1,123 @@
 from utils.exceptions import ItemNotFoundError
 
-
-class BSTNode:
-    def __init__(self, key: str, value):
-        self.key = key  # 通常是书名 (title)，用于字母排序比对
-        self.value = value  # 存放 Resource/Book 对象
+class Node:
+    def __init__(self, k, v):
+        self.key = k
+        self.value = v
         self.left = None
         self.right = None
+        self.node_level = 0 
 
 
 class BST:
-    """
-    二叉搜索树。用于按书名快速搜索图书。
-    组员任务：重点搞懂递归逻辑！
-    """
-
     def __init__(self):
         self.root = None
 
-    def insert(self, key: str, value):
-        """
-        TODO: 插入新节点
-        提示：如果 root 为空，直接赋值。如果不为空，调用内部的递归辅助方法 _insert_recursive
-        """
-        if self.root is None:
-            self.root = BSTNode(key, value)
+    def insert(self, k_val, v_val):
+        if self.root == None:
+            self.root = Node(k_val, v_val)
+            self.root.node_level = 1 
         else:
-            self._insert_recursive(self.root, key, value)
+            self._add_node(self.root, k_val, v_val, 1)
 
-    def _insert_recursive(self, current_node, key, value):
-        """
-        TODO: 递归查找插入位置
-        如果 key < current_node.key，往左走；如果大于，往右走。
-        """
-        if key < current_node.key:
-            if current_node.left is None:
-                current_node.left = BSTNode(key, value)
+    def _add_node(self, current_node, k_val, v_val, current_level):
+        next_level = current_level + 1
+        if k_val < current_node.key:
+            if current_node.left == None:
+                current_node.left = Node(k_val, v_val)
+                current_node.left.node_level = next_level
             else:
-                self._insert_recursive(current_node.left, key, value)
-        elif key > current_node.key:
-            if current_node.right is None:
-                current_node.right = BSTNode(key, value)
+                self._add_node(current_node.left, k_val, v_val, next_level)
+        elif k_val > current_node.key:
+            if current_node.right == None:
+                current_node.right = Node(k_val, v_val)
+                current_node.right.node_level = next_level
             else:
-                self._insert_recursive(current_node.right, key, value)
+                self._add_node(current_node.right, k_val, v_val, next_level)
         else:
-            # key exists, update value or raise error?
-            # Assuming update for now or just ignore
-            current_node.value = value
+            current_node.value = v_val
+            print(f"Key {k_val} already exists, updating value.")
 
-    def search(self, key: str):
-        """
-        TODO: 根据书名搜索图书对象
-        提示：调用 _search_recursive。如果最后返回 None，抛出 ItemNotFoundError。
-        """
-        result = self._search_recursive(self.root, key)
-        if result is None:
-            raise ItemNotFoundError(f"Book with title '{key}' not found.")
-        return result
+    def search(self, search_key):
+        search_result = self._find_node(self.root, search_key)
+        if search_result == None:
+            print(f"Search failed for key: {search_key}")
+            raise ItemNotFoundError("Not found")
+        print(f"Key {search_key} found at level {search_result.node_level}.") 
+        return search_result
 
-    def _search_recursive(self, current_node, key):
-        """TODO: 递归搜索逻辑"""
-        if current_node is None:
+    def _find_node(self, current_node_param, target_key):
+        if current_node_param == None:
+            print(f"Node not found for key {target_key} in this path.")
             return None
-        if key == current_node.key:
-            return current_node.value
-        elif key < current_node.key:
-            return self._search_recursive(current_node.left, key)
+        
+        node_key_here = current_node_param.key
+        if target_key == node_key_here:
+            print(f"Found node with key {target_key}.")
+            return current_node_param 
+        elif target_key < node_key_here:
+            print(f"Moving left from {node_key_here} for {target_key}.")
+            return self._find_node(current_node_param.left, target_key)
+        else: 
+            print(f"Moving right from {node_key_here} for {target_key}.")
+            return self._find_node(current_node_param.right, target_key)
+
+    def remove(self, key_to_remove):
+        print(f"Attempting to remove key: {key_to_remove}")
+        self.root = self._remove_node(self.root, key_to_remove)
+        if self.root == None:
+            print("Tree is now empty after removal.")
         else:
-            return self._search_recursive(current_node.right, key)
+            print(f"Key {key_to_remove} removed (if it existed).")
 
-    def remove(self, key: str):
-        """Remove a node by key"""
-        self.root = self._remove_recursive(self.root, key)
-
-    def _remove_recursive(self, current_node, key):
-        if current_node is None:
+    def _remove_node(self, current_node_for_remove, key_to_remove):
+        if current_node_for_remove == None:
+            print(f"Key {key_to_remove} not found in this subtree.")
             return None
 
-        if key < current_node.key:
-            current_node.left = self._remove_recursive(current_node.left, key)
-        elif key > current_node.key:
-            current_node.right = self._remove_recursive(current_node.right, key)
-        else:
-            # Node found
-            # Case 1: No children (leaf)
-            if current_node.left is None and current_node.right is None:
+        if key_to_remove < current_node_for_remove.key:
+            current_node_for_remove.left = self._remove_node(current_node_for_remove.left, key_to_remove)
+        elif key_to_remove > current_node_for_remove.key:
+            current_node_for_remove.right = self._remove_node(current_node_for_remove.right, key_to_remove)
+        else: 
+            print(f"Node with key {key_to_remove} found for removal.")
+            if current_node_for_remove.left == None and current_node_for_remove.right == None:
+                print("Node is a leaf, simply removing.")
                 return None
             
-            # Case 2: One child
-            if current_node.left is None:
-                return current_node.right
-            if current_node.right is None:
-                return current_node.left
+            if current_node_for_remove.left == None:
+                print("Node has only right child, promoting right child.")
+                return current_node_for_remove.right
+            if current_node_for_remove.right == None:
+                print("Node has only left child, promoting left child.")
+                return current_node_for_remove.left
             
-            # Case 3: Two children
-            # Find in-order successor (smallest in right subtree)
-            successor = self._find_min(current_node.right)
-            current_node.key = successor.key
-            current_node.value = successor.value
-            current_node.right = self._remove_recursive(current_node.right, successor.key)
+            print("Node has two children, finding successor.")
+            successor_node = self._find_min_node(current_node_for_remove.right)
+            current_node_for_remove.key = successor_node.key
+            current_node_for_remove.value = successor_node.value
+            current_node_for_remove.right = self._remove_node(current_node_for_remove.right, successor_node.key)
         
-        return current_node
+        return current_node_for_remove
 
-    def _find_min(self, node):
-        current = node
-        while current.left is not None:
-            current = current.left
-        return current
+    def _find_min_node(self, start_node):
+        current_min_node = start_node
+        while current_min_node.left != None:
+            current_min_node = current_min_node.left
+            print(f"Traversing left to find min. Current: {current_min_node.key}")
+        print(f"Found minimum node with key: {current_min_node.key}")
+        return current_min_node
 
     def to_list(self):
-        """Helper method to convert BST to a list of values (books/resources)"""
-        result = []
-        self._inorder_traversal(self.root, result)
-        return result
+        all_items_list = []
+        self._inorder_traversal(self.root, all_items_list)
+        print(f"Converted BST to list with {len(all_items_list)} items.")
+        return all_items_list
 
-    def _inorder_traversal(self, node, result):
-        if node:
-            self._inorder_traversal(node.left, result)
-            result.append(node.value)
-            self._inorder_traversal(node.right, result)
+    def _inorder_traversal(self, current_node_traversal, result_array):
+        if current_node_traversal:
+            self._inorder_traversal(current_node_traversal.left, result_array)
+            result_array.append(current_node_traversal.value)
+            self._inorder_traversal(current_node_traversal.right, result_array)
+        else:
+            print("Reached end of a branch in traversal.")

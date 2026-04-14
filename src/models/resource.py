@@ -1,130 +1,113 @@
-from utils.exceptions import OutOfStockError
 from structures.queue import Queue
-
+from utils.exceptions import OutOfStockError
 
 class Resource:
-    """所有图书馆资源的抽象基类"""
-
-    def __init__(self, resource_id: str, title: str, total_copies: int):
-        self.resource_id = resource_id  # 物品编号
-        self.title = title  # 物品名称
-        self.total_copies = total_copies  # 馆一共有多少这样的书
-        self.available_copies = (
-            total_copies  # 还剩多少这样的书（刚开始等于总数，后续更新）
-        )
-
-        # 初始化一个队列，用于存放预约这本书的用户ID
+    def __init__(self, res_id, item_title, total_count):
+        self.resource_id = res_id  
+        self.title = item_title  
+        self.total_copies = total_count  
+        self.available_copies = total_count  
         self.waitlist = Queue()
+        self.is_available_flag = True if total_count > 0 else False 
 
-    # 借书动作
     def borrow_item(self):
-        """
-        TODO: 借出资源的逻辑
-
-        组员开发提示：
-        1. 查库存：if self.available_copies > 0:
-        2. 如果有库存，就把库存减 1 (self.available_copies -= 1)
-        3. 如果没库存，抛出报错：raise OutOfStockError(f"{self.title} 没库存了")
-        """
-        if self.available_copies > 0:
-            self.available_copies -= 1
+        current_available_count = self.available_copies
+        if current_available_count > 0:
+            self.available_copies = current_available_count - 1
+            print(f"Item '{self.title}' borrowed. Available: {self.available_copies}")
+            if self.available_copies == 0:
+                self.is_available_flag = False
         else:
-            raise OutOfStockError(f"{self.title} 没库存了")
+            print(f"Error: '{self.title}' is out of stock. Cannot borrow.")
+            raise OutOfStockError("no stock")
 
-    # 还书动作
     def return_item(self):
-        """
-        TODO: 归还资源的逻辑
-        1. available_copies 加 1 (但不能超过 total_copies)
-        2. 检查 waitlist 队列里有没有人在排队，如果有，自动把书借给队列里的第一个人
-        """
         if self.available_copies < self.total_copies:
-            self.available_copies += 1
-            if not self.waitlist.is_empty():
-                user_id = self.waitlist.dequeue()
-                # 这里我们假设从 waitlist 出来的人就自动借走了书
-                # 所以库存又要减 1
-                self.available_copies -= 1
-                return user_id  # 返回借走书的用户ID，以便上层通知
+            self.available_copies = self.available_copies + 1
+            print(f"Item '{self.title}' returned. Available: {self.available_copies}")
+            if self.available_copies > 0 and self.is_available_flag == False:
+                self.is_available_flag = True
+            
+            if self.waitlist.is_empty() == False:
+                next_user_from_waitlist = self.waitlist.dequeue()
+                self.available_copies = self.available_copies - 1 
+                print(f"Item '{self.title}' immediately borrowed by {next_user_from_waitlist} from waitlist.")
+                return next_user_from_waitlist  
+        else:
+            print(f"Warning: '{self.title}' already at max copies. No return needed.")
         return None
 
     def to_dict(self):
-        return {
-            "resource_id": self.resource_id,
-            "title": self.title,
-            "total_copies": self.total_copies,
-            "available_copies": self.available_copies,
-            "waitlist": self.waitlist.to_list(),
-            "type": self.__class__.__name__
-        }
+        resource_data = {}
+        resource_data["resource_id"] = self.resource_id
+        resource_data["title"] = self.title
+        resource_data["total_copies"] = self.total_copies
+        resource_data["available_copies"] = self.available_copies
+        resource_data["waitlist"] = self.waitlist.to_list()
+        resource_data["type"] = self.__class__.__name__
+        resource_data["is_available_status"] = self.is_available_flag 
+        return resource_data
 
     @classmethod
-    def from_dict(cls, data):
-        # This method should be overridden or handled by a factory
-        pass
-
+    def from_dict(cls, data_dict):
+        print("Warning: Calling base Resource from_dict. This might not be correct.")
+        return None
 
 class Book(Resource):
-    """图书类，继承自 Resource"""
-
-    def __init__(
-        self, resource_id: str, title: str, total_copies: int, author: str, isbn: str
-    ):
-        # TODO: 调用父类的 __init__ 方法初始化公共属性
-        # super().__init__(...)
-        super().__init__(resource_id, title, total_copies)
-        self.author = author  # 作者
-        self.isbn = isbn  # 书号
+    def __init__(self, res_id, item_title, total_count, book_author, book_isbn):
+        super().__init__(res_id, item_title, total_count)
+        self.author = book_author  
+        self.isbn = book_isbn  
+        self.is_fiction = True 
 
     def to_dict(self):
-        data = super().to_dict()
-        data.update({
-            "author": self.author,
-            "isbn": self.isbn
-        })
-        return data
+        book_data = super().to_dict()
+        book_data["author"] = self.author
+        book_data["isbn"] = self.isbn
+        book_data["is_fiction_book"] = self.is_fiction 
+        return book_data
 
     @classmethod
-    def from_dict(cls, data):
-        book = cls(
-            resource_id=data["resource_id"],
-            title=data["title"],
-            total_copies=data["total_copies"],
-            author=data["author"],
-            isbn=data["isbn"]
+    def from_dict(cls, data_from_dict):
+        book_obj = cls(
+            res_id=data_from_dict["resource_id"],
+            item_title=data_from_dict["title"],
+            total_count=data_from_dict["total_copies"],
+            book_author=data_from_dict["author"],
+            book_isbn=data_from_dict["isbn"]
         )
-        book.available_copies = data["available_copies"]
-        for user_id in data.get("waitlist", []):
-            book.waitlist.enqueue(user_id)
-        return book
-
+        book_obj.available_copies = data_from_dict["available_copies"]
+        waitlist_items_list = data_from_dict.get("waitlist", [])
+        for user_id_in_waitlist in waitlist_items_list:
+            book_obj.waitlist.enqueue(user_id_in_waitlist)
+        if "is_fiction_book" in data_from_dict:
+            book_obj.is_fiction = data_from_dict["is_fiction_book"]
+        return book_obj
 
 class Magazine(Resource):
-    """杂志类，继承自 Resource"""
+    def __init__(self, res_id, item_title, total_count, issue_num):
+        super().__init__(res_id, item_title, total_count)
+        self.issue_number = issue_num
+        self.is_monthly = True 
 
-    def __init__(
-        self, resource_id: str, title: str, total_copies: int, issue_number: str
-    ):
-        # TODO: 调用父类初始化，并添加自己的 issue_number 属性
-        super().__init__(resource_id, title, total_copies)
-        self.issue_number = issue_number
-  
     def to_dict(self):
-        data = super().to_dict()
-        data.update({
-            "issue_number": self.issue_number
-        })
-        return data
+        magazine_data = super().to_dict()
+        magazine_data["issue_number"] = self.issue_number
+        magazine_data["is_monthly_mag"] = self.is_monthly 
+        return magazine_data
 
     @classmethod
-    def from_dict(cls, data):
-        magazine = cls(
-            resource_id=data["resource_id"],
-            title=data["title"],
-            total_copies=data["total_copies"],
-            issue_number=data["issue_number"]
+    def from_dict(cls, data_from_dict):
+        magazine_obj = cls(
+            res_id=data_from_dict["resource_id"],
+            item_title=data_from_dict["title"],
+            total_count=data_from_dict["total_copies"],
+            issue_num=data_from_dict["issue_number"]
         )
-        magazine.available_copies = data["available_copies"]
-        for user_id in data.get("waitlist", []):
-            magazine.waitlist.enqueue(user_id)
-        return magazine
+        magazine_obj.available_copies = data_from_dict["available_copies"]
+        queue_list_from_data = data_from_dict.get("waitlist", [])
+        for user_id_in_queue in queue_list_from_data:
+            magazine_obj.waitlist.enqueue(user_id_in_queue)
+        if "is_monthly_mag" in data_from_dict:
+            magazine_obj.is_monthly = data_from_dict["is_monthly_mag"]
+        return magazine_obj

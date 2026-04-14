@@ -5,64 +5,95 @@ from structures.bst import BST
 from models.user import User
 from models.resource import Book, Magazine
 
-# 定义数据文件路径
 DATA_FILE = os.path.join(os.path.dirname(__file__), "../../data/library_data.json")
-
 
 class Storage:
     @staticmethod
-    def save_data(users_hash: HashTable, books_bst: BST):
-        """
-        TODO: 将内存中的对象序列化为 JSON 并保存
-        1. 遍历 HashTable，把所有的 User 对象转成字典
-        2. 遍历 BST，把所有的 Book/Magazine 转成字典
-        3. 组装成一个大字典 data = {"users": [...], "books": [...]}
-        4. 使用 json.dump 写入 DATA_FILE
-        """
-        data = {
-            "users": [user.to_dict() for user in users_hash.to_list()],
-            "books": [item.to_dict() for item in books_bst.to_list()]
-        }
+    def save_data(users_data_to_save, books_data_to_save):
+        data_to_dump = {}
+        data_to_dump["users"] = []
+        for user_obj in users_data_to_save.to_list():
+            data_to_dump["users"].append(user_obj.to_dict())
+            
+        data_to_dump["books"] = []
+        for book_obj in books_data_to_save.to_list():
+            data_to_dump["books"].append(book_obj.to_dict())
         
         os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
         
-        with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+        file_handle = open(DATA_FILE, 'w', encoding='utf-8')
+        json.dump(data_to_dump, file_handle, indent=4)
+        file_handle.close()
+        print("Data saved to file: " + DATA_FILE)
 
     @staticmethod
-    def load_data() -> tuple:  # 注意返回的是元组
-        """
-        TODO: 系统启动时加载数据
-        1. 检查 DATA_FILE 是否存在，不存在则返回空的 HashTable 和 BST
-        2. 使用 json.load 读取数据
-        3. 根据读取的字典，重新实例化 User 和 Book 对象，并放回 HashTable 和 BST 中
-        4. return (恢复好的_users_hash, 恢复好的_books_bst)
-        """
-        users = HashTable()
-        books = BST()
+    def generate_initial_data(user_hash_table, book_bst_tree):
+        print("Starting to generate a large initial dataset for the library system...")
+        for i in range(1, 31):
+            new_user_instance = User(f"U{i:03}", f"User_Name_{i}")
+            user_hash_table.insert(new_user_instance.user_id, new_user_instance)
+            print(f"Generated user: {new_user_instance.name}")
+
+        for i in range(1, 41):
+            new_book_instance = Book(f"B{i:03}", f"Book_Title_{i}", 5, f"Author_{i}", f"ISBN-{i}")
+            book_bst_tree.insert(new_book_instance.title, new_book_instance)
+            print(f"Generated book: {new_book_instance.title}")
+            
+        for i in range(1, 21):
+            new_magazine_instance = Magazine(f"M{i:03}", f"Magazine_Title_{i}", 3, f"Issue_{i}")
+            book_bst_tree.insert(new_magazine_instance.title, new_magazine_instance)
+            print(f"Generated magazine: {new_magazine_instance.title}")
+            
+        user_one = user_hash_table.get("U001")
+        book_one = book_bst_tree.search("Book_Title_1")
+        book_one.borrow_item()
+        user_one.borrow_book("Book_Title_1")
+        print(f"User {user_one.name} borrowed {book_one.title}.")
+        
+        user_two = user_hash_table.get("U002")
+        magazine_one = book_bst_tree.search("Magazine_Title_1")
+        magazine_one.borrow_item()
+        user_two.borrow_book("Magazine_Title_1")
+        print(f"User {user_two.name} borrowed {magazine_one.title}.")
+
+        Storage.save_data(user_hash_table, book_bst_tree)
+        print("Initial dataset generation and saving completed.")
+
+    @staticmethod
+    def load_data():
+        user_hash_table_loaded = HashTable()
+        book_bst_tree_loaded = BST()
 
         if not os.path.exists(DATA_FILE):
-            return users, books
+            print("Data file not found. Generating initial data...")
+            Storage.generate_initial_data(user_hash_table_loaded, book_bst_tree_loaded)
+            return user_hash_table_loaded, book_bst_tree_loaded
         
         try:
-            with open(DATA_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+            file_to_read = open(DATA_FILE, 'r', encoding='utf-8')
+            loaded_data_dict = json.load(file_to_read)
+            file_to_read.close()
+            print("Data loaded from file: " + DATA_FILE)
                 
-            for user_data in data.get("users", []):
-                user = User.from_dict(user_data)
-                users.insert(user.user_id, user)
+            user_list_from_data = loaded_data_dict.get("users", [])
+            for user_dict_data in user_list_from_data:
+                user_object = User.from_dict(user_dict_data)
+                user_hash_table_loaded.insert(user_object.user_id, user_object)
                 
-            for book_data in data.get("books", []):
-                if book_data.get("type") == "Book":
-                    item = Book.from_dict(book_data)
-                elif book_data.get("type") == "Magazine":
-                    item = Magazine.from_dict(book_data)
+            book_list_from_data = loaded_data_dict.get("books", [])
+            for book_dict_data in book_list_from_data:
+                item_type_str = book_dict_data.get("type")
+                if item_type_str == "Book":
+                    item_object = Book.from_dict(book_dict_data)
+                elif item_type_str == "Magazine":
+                    item_object = Magazine.from_dict(book_dict_data)
                 else:
-                    # Fallback or unknown type
+                    print(f"Warning: Unknown item type '{item_type_str}' encountered during load.")
                     continue
-                books.insert(item.title, item)
-        except (json.JSONDecodeError, FileNotFoundError):
-            # If file is corrupted or empty, return empty structures
+                book_bst_tree_loaded.insert(item_object.title, item_object)
+                
+        except Exception as e:
+            print(f"An error occurred during data loading: {e}")
             pass
             
-        return users, books
+        return user_hash_table_loaded, book_bst_tree_loaded
