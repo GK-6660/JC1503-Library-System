@@ -12,7 +12,7 @@ if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
 try:
-    from src.structures.tree import CategoryTree
+    from src.structures.tree import CTree
     from src.models.resource import Book
     from src.models.user import User
     
@@ -67,120 +67,120 @@ except ImportError as e:
 class TestCategoryTree(unittest.TestCase):
 
     def setUp(self):
-        self.tree = CategoryTree("Library")
+        self.tree = CTree()
 
     def test_add_root_category(self):
-        result = self.tree.add_category("Library", "Science")
+        result = self.tree.add_c("Lib", "Science")
         self.assertTrue(result)
         self.assertIsNotNone(self.tree.root)
-        self.assertEqual(self.tree.root.category_name, "Library")
-        self.assertIsNotNone(self.tree.find_category("Science"))
+        self.assertEqual(self.tree.root.name, "Lib")
+        self.assertIsNotNone(self.tree.find_c("Science"))
 
     def test_add_child_category(self):
-        self.tree.add_category("Library", "Science")
-        self.tree.add_category("Science", "Mathematics")
-        self.tree.add_category("Science", "Physics")
+        self.tree.add_c("Lib", "Science")
+        self.tree.add_c("Science", "Mathematics")
+        self.tree.add_c("Science", "Physics")
 
-        science_node = self.tree.find_category("Science")
-        child_count = len(science_node.children)
+        science_node = self.tree.find_c("Science")
+        child_count = science_node.children.size
         self.assertEqual(child_count, 2)
 
     def test_add_duplicate_category(self):
-        self.tree.add_category("Library", "Science")
-        self.tree.add_category("Science", "Mathematics")
+        self.tree.add_c("Lib", "Science")
+        self.tree.add_c("Science", "Mathematics")
 
         with self.assertRaises(DuplicateItemError):
-            self.tree.add_category("Science", "Mathematics")
+            self.tree.add_c("Science", "Mathematics")
 
     def test_add_category_with_nonexistent_parent(self):
         with self.assertRaises(ItemNotFoundError):
-            self.tree.add_category("Nonexistent Category", "Mathematics")
+            self.tree.add_c("Nonexistent Category", "Mathematics")
 
     def test_search_category(self):
-        self.tree.add_category("Library", "Science")
-        self.tree.add_category("Science", "Mathematics")
-        self.tree.add_category("Mathematics", "Calculus")
+        self.tree.add_c("Lib", "Science")
+        self.tree.add_c("Science", "Mathematics")
+        self.tree.add_c("Mathematics", "Calculus")
 
-        node = self.tree.find_category("Science")
-        self.assertEqual(node.category_name, "Science")
+        node = self.tree.find_c("Science")
+        self.assertEqual(node.name, "Science")
 
-        node = self.tree.find_category("Mathematics")
-        self.assertEqual(node.category_name, "Mathematics")
+        node = self.tree.find_c("Mathematics")
+        self.assertEqual(node.name, "Mathematics")
 
-        node = self.tree.find_category("Calculus")
-        self.assertEqual(node.category_name, "Calculus")
+        node = self.tree.find_c("Calculus")
+        self.assertEqual(node.name, "Calculus")
 
         with self.assertRaises(ItemNotFoundError):
-            self.tree.find_category("Chemistry")
+            self.tree.find_c("Chemistry")
 
     def test_get_path(self):
-        self.tree.add_category("Library", "Science")
-        self.tree.add_category("Science", "Mathematics")
-        self.tree.add_category("Mathematics", "Calculus")
-        self.tree.add_category("Calculus", "Differentiation")
+        self.tree.add_c("Lib", "Science")
+        self.tree.add_c("Science", "Mathematics")
+        self.tree.add_c("Mathematics", "Calculus")
+        self.tree.add_c("Calculus", "Differentiation")
 
-        path = self.tree.get_path("Differentiation")
-        self.assertEqual(path, ["Library", "Science", "Mathematics", "Calculus", "Differentiation"])
+        path = self.tree.get_p("Differentiation")
+        self.assertEqual(path, ["Lib", "Science", "Mathematics", "Calculus", "Differentiation"])
 
         with self.assertRaises(ItemNotFoundError):
-            self.tree.get_path("Nonexistent Category")
+            self.tree.get_p("Nonexistent Category")
 
     def test_get_all_categories(self):
-        self.tree.add_category("Library", "Science")
-        self.tree.add_category("Science", "Mathematics")
-        self.tree.add_category("Science", "Physics")
-        self.tree.add_category("Library", "Arts")
-        self.tree.add_category("Arts", "Literature")
-        self.tree.add_category("Library", "Engineering")
+        self.tree.add_c("Lib", "Science")
+        self.tree.add_c("Science", "Mathematics")
+        self.tree.add_c("Science", "Physics")
+        self.tree.add_c("Lib", "Arts")
+        self.tree.add_c("Arts", "Literature")
+        self.tree.add_c("Lib", "Engineering")
 
-        all_cats = self.tree.get_all_categories()
-        expected_cats = ["Library", "Science", "Mathematics", "Physics", "Arts", "Literature", "Engineering"]
+        all_cats = self.tree.get_all()
+        expected_cats = ["Lib", "Science", "Mathematics", "Physics", "Arts", "Literature", "Engineering"]
         self.assertEqual(len(all_cats), 7)
         for cat in expected_cats:
             self.assertIn(cat, all_cats)
 
     def test_remove_category(self):
-        self.tree.add_category("Library", "Science")
-        self.tree.add_category("Science", "Mathematics")
-        self.tree.add_category("Mathematics", "Calculus")
+        self.tree.add_c("Lib", "Science")
+        self.tree.add_c("Science", "Mathematics")
+        self.tree.add_c("Mathematics", "Calculus")
 
-        result = self.tree.remove_category("Calculus")
+        result = self.tree.rm_c("Calculus")
         self.assertTrue(result)
         with self.assertRaises(ItemNotFoundError):
-            self.tree.find_category("Calculus")
+            self.tree.find_c("Calculus")
 
-        result = self.tree.remove_category("Mathematics")
+        result = self.tree.rm_c("Mathematics")
         self.assertTrue(result)
         with self.assertRaises(ItemNotFoundError):
-            self.tree.find_category("Mathematics")
+            self.tree.find_c("Mathematics")
 
-        result = self.tree.remove_category("Nonexistent")
+        result = self.tree.rm_c("Nonexistent")
         self.assertFalse(result)
 
     def test_move_category(self):
-        self.tree.add_category("Library", "Science")
-        self.tree.add_category("Library", "Arts")
-        self.tree.add_category("Science", "Mathematics")
+        self.tree.add_c("Lib", "Science")
+        self.tree.add_c("Lib", "Arts")
+        self.tree.add_c("Science", "Mathematics")
 
-        result = self.tree.move_category("Mathematics", "Arts")
+        result = self.tree.mv_c("Mathematics", "Arts")
         self.assertTrue(result)
 
-        path = self.tree.get_path("Mathematics")
-        self.assertEqual(path, ["Library", "Arts", "Mathematics"])
+        path = self.tree.get_p("Mathematics")
+        self.assertEqual(path, ["Lib", "Arts", "Mathematics"])
 
-        result = self.tree.move_category("Mathematics", "Nonexistent")
+        result = self.tree.mv_c("Mathematics", "Nonexistent")
         self.assertFalse(result)
 
     def test_nested_categories_depth(self):
-        self.tree.add_category("Library", "Level1")
+        self.tree.add_c("Lib", "Level1")
         current = "Level1"
         for i in range(2, 7):
             name = f"Level{i}"
-            self.tree.add_category(current, name)
+            self.tree.add_c(current, name)
             current = name
 
-        path = self.tree.get_path("Level6")
-        expected = ["Library", "Level1", "Level2", "Level3", "Level4", "Level5", "Level6"]
+        path = self.tree.get_p("Level6")
+        expected = ["Lib", "Level1", "Level2", "Level3", "Level4", "Level5", "Level6"]
         self.assertEqual(path, expected)
 
 
@@ -279,7 +279,7 @@ class TestHashTable(unittest.TestCase):
 
     def setUp(self):
         from src.structures.hash_table import HashTable
-        self.ht = HashTable(capacity=10)
+        self.ht = HashTable()
 
     def test_insert_get(self):
         user = User("U001", "Alice")
@@ -344,10 +344,10 @@ class TestBST(unittest.TestCase):
         self.bst.insert("Advanced Python", self.book2)
         
         found = self.bst.search("Python Basics")
-        self.assertEqual(found.title, "Python Basics")
+        self.assertEqual(found.value.title, "Python Basics")
         
         found = self.bst.search("Advanced Python")
-        self.assertEqual(found.title, "Advanced Python")
+        self.assertEqual(found.value.title, "Advanced Python")
         
         with self.assertRaises(ItemNotFoundError):
             self.bst.search("Nonexistent Book")
@@ -358,7 +358,7 @@ class TestBST(unittest.TestCase):
         self.bst.insert("Python Basics", new_book)
         
         found = self.bst.search("Python Basics")
-        self.assertEqual(found.total_copies, 10)
+        self.assertEqual(found.value.total_copies, 10)
 
 
 class TestIntegration(unittest.TestCase):
@@ -380,7 +380,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_borrow_flow(self):
         user = self.users.get("U001")
-        book = self.books.search("Python Guide")
+        book_node = self.books.search("Python Guide")
+        book = book_node.value
         
         book.borrow_item()
         user.borrow_book("Python Guide")
@@ -397,7 +398,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_return_flow(self):
         user = self.users.get("U001")
-        book = self.books.search("Python Guide")
+        book_node = self.books.search("Python Guide")
+        book = book_node.value
         
         book.borrow_item()
         user.borrow_book("Python Guide")

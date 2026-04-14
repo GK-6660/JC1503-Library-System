@@ -45,13 +45,15 @@ class Storage:
             print(f"Generated magazine: {new_magazine_instance.title}")
             
         user_one = user_hash_table.get("U001")
-        book_one = book_bst_tree.search("Book_Title_1")
+        book_one_node = book_bst_tree.search("Book_Title_1")
+        book_one = book_one_node.value
         book_one.borrow_item()
         user_one.borrow_book("Book_Title_1")
         print(f"User {user_one.name} borrowed {book_one.title}.")
         
         user_two = user_hash_table.get("U002")
-        magazine_one = book_bst_tree.search("Magazine_Title_1")
+        magazine_one_node = book_bst_tree.search("Magazine_Title_1")
+        magazine_one = magazine_one_node.value
         magazine_one.borrow_item()
         user_two.borrow_book("Magazine_Title_1")
         print(f"User {user_two.name} borrowed {magazine_one.title}.")
