@@ -1,118 +1,88 @@
 from utils.exceptions import ItemNotFoundError, DuplicateItemError
 
-
 class HashNode:
-    """哈希表中的节点（用于链地址法解决冲突）"""
-
-    def __init__(self, key, value):
-        self.key = key  # 存ID
-        self.value = value  # 这里通常存 User 对象
-        self.next = None  # 冲突时指向下一个人
-
+    def __init__(self, k, v):
+        self.key = k
+        self.value = v
+        self.next = None
+        self.node_status = "active" 
 
 class HashTable:
-    """
-    手动实现的哈希表。
-    主要用于通过 user_id 快速查找 User 对象。
-    """
-
-    def __init__(self, capacity=100):
-        self.capacity = capacity
-        # Python中没有纯数组，这里用固定长度的list模拟底层连续内存，严禁调用 append 等动态方法！
-        self.table = [None] * capacity
+    def __init__(self):
+        self.capacity = 100
+        self.table = [None] * self.capacity
         self.size = 0
+        self.load_factor_threshold = 0.7 
 
-    def _hash_function(self, key: str) -> int:
-        """
-        哈希函数：把学号变成抽屉编号 (0 到 99)
-        组员开发提示：
-        1. 准备一个累加器：total = 0
-        2. 遍历学号里的每一个字符：for char in key:
-        3. 把字符转成数字加起来：total += ord(char)  # ord()可以把字母变成ASCII数字
-        4. 对抽屉总数求余：return total % self.capacity
-        """
-        total = 0
-        for char in key:
-            total += ord(char)
+    def hash_func(self, key_str):
+        total_ascii_sum = 0
+        for char_in_key in key_str:
+            total_ascii_sum += ord(char_in_key)
+        final_hash_index = total_ascii_sum % self.capacity
+        print(f"Hashing key '{key_str}' to index {final_hash_index}")
+        return final_hash_index
 
-        return total % self.capacity
+    def insert(self, key_to_insert, value_to_insert):
+        idx = self.hash_func(key_to_insert)
+        current_node_at_idx = self.table[idx]
 
-    def insert(self, key: str, value):
-        index = self._hash_function(key)
-        current = self.table[index]
-
-        # 如果这个位置是空的，直接放入
-        if current is None:
-            self.table[index] = HashNode(key, value)
+        if current_node_at_idx == None:
+            self.table[idx] = HashNode(key_to_insert, value_to_insert)
             self.size += 1
+            print(f"Inserted '{key_to_insert}' at empty slot {idx}.")
             return
 
-        # 如果不为空，遍历链表
-        prev = None
-        while current is not None:
-            if current.key == key:
-                # 发现ID已经存在，抛出异常
-                raise DuplicateItemError(f"用户 ID {key} 已存在，请勿重复添加")
-            prev = current
-            current = current.next
+        prev_node = None
+        temp_node = current_node_at_idx
+        while temp_node != None:
+            if temp_node.key == key_to_insert:
+                print(f"Error: Key '{key_to_insert}' already exists. Cannot insert duplicate.")
+                raise DuplicateItemError("Exists")
+            prev_node = temp_node
+            temp_node = temp_node.next
 
-        # 挂在链表末尾
-        prev.next = HashNode(key, value)
+        prev_node.next = HashNode(key_to_insert, value_to_insert)
         self.size += 1
+        print(f"Inserted '{key_to_insert}' in collision chain at {idx}.")
 
-    def get(self, key: str):
-        """
-        找学生
-        组员开发提示：
-        1. 算抽屉号：index = self._hash_function(key)
-        2. 拉开抽屉拿东西：current = self.table[index]
-        3. 用 while 循环在这个抽屉的链表里找：
-           while current is not None:
-               if current.key == key:
-                   return current.value  # 找到了，交出 User 对象
-               current = current.next
-        4. 找完了还没找到，抛出报错：
-           raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
-        """
-        index = self._hash_function(key)
-        current = self.table[index]
-        while current is not None:
-            if current.key == key:
-                return current.value
-            current = current.next
+    def get(self, key_to_get):
+        idx_for_get = self.hash_func(key_to_get)
+        current_node_for_get = self.table[idx_for_get]
+        while current_node_for_get != None:
+            if current_node_for_get.key == key_to_get:
+                print(f"Found value for key '{key_to_get}'.")
+                return current_node_for_get.value
+            current_node_for_get = current_node_for_get.next
 
-        raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
+        print(f"Key '{key_to_get}' not found in hash table.")
+        raise ItemNotFoundError("Not found")
 
-    def remove(self, key: str):
-        """
-        删除指定 key 的用户
-        如果找不到就抛出 ItemNotFoundError
-        """
-        index = self._hash_function(key)
-        current = self.table[index]
-        prev = None
+    def remove(self, key_to_remove):
+        idx_for_remove = self.hash_func(key_to_remove)
+        current_node_for_remove = self.table[idx_for_remove]
+        prev_node_for_remove = None
 
-        while current is not None:
-            if current.key == key:
-                if prev is None:
-                    # 删除头节点
-                    self.table[index] = current.next
+        while current_node_for_remove != None:
+            if current_node_for_remove.key == key_to_remove:
+                if prev_node_for_remove == None:
+                    self.table[idx_for_remove] = current_node_for_remove.next
                 else:
-                    # 删除中间或尾节点
-                    prev.next = current.next
+                    prev_node_for_remove.next = current_node_for_remove.next
                 self.size -= 1
+                print(f"Key '{key_to_remove}' removed from hash table.")
                 return
-            prev = current
-            current = current.next
+            prev_node_for_remove = current_node_for_remove
+            current_node_for_remove = current_node_for_remove.next
 
-        raise ItemNotFoundError(f"找不到学号为 {key} 的用户")
+        print(f"Key '{key_to_remove}' not found for removal.")
+        raise ItemNotFoundError("Not found")
 
     def to_list(self):
-        """Helper method to get all values (users) from the hash table."""
-        all_items = []
+        all_values_list = []
         for i in range(self.capacity):
-            current = self.table[i]
-            while current:
-                all_items.append(current.value)
-                current = current.next
-        return all_items
+            current_node_in_bucket = self.table[i]
+            while current_node_in_bucket:
+                all_values_list.append(current_node_in_bucket.value)
+                current_node_in_bucket = current_node_in_bucket.next
+        print(f"Converted hash table to list with {len(all_values_list)} items.")
+        return all_values_list
