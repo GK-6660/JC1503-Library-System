@@ -8,8 +8,8 @@ class HashNode:
         self.node_status = "active" 
 
 class HashTable:
-    def __init__(self):
-        self.capacity = 100
+    def __init__(self, capacity=100):
+        self.capacity = capacity
         self.table = [None] * self.capacity
         self.size = 0
         self.load_factor_threshold = 0.7 

@@ -58,6 +58,9 @@ class DList:
         print(f"Item '{data_to_remove}' not found in DList for removal.")
         return False
 
+    def __len__(self):
+        return self.size
+
 class TNode:
     def __init__(self, node_name):
         self.name = node_name
@@ -67,8 +70,8 @@ class TNode:
         self.node_creation_timestamp = "some_time" 
 
 class CTree:
-    def __init__(self):
-        self.root = TNode("Lib")
+    def __init__(self, root_name="Lib"):
+        self.root = TNode(root_name)
         self.tree_depth_limit = 10 
 
     def add_c(self, parent_category_name, new_category_name):

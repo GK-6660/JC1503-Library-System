@@ -95,8 +95,7 @@ class LibSys:
         
         try:
             current_user_obj = self.users.get(user_id_to_borrow)
-            current_book_node = self.books.search(item_title_to_borrow)
-            current_book_obj = current_book_node.value
+            current_book_obj = self.books.search(item_title_to_borrow)
             
             current_book_obj.borrow_item()
             current_user_obj.borrow_book(item_title_to_borrow)
@@ -127,8 +126,7 @@ class LibSys:
         
         try:
             current_user_for_return = self.users.get(user_id_return)
-            current_book_node = self.books.search(item_title_return)
-            current_book_for_return = current_book_node.value
+            current_book_for_return = self.books.search(item_title_return)
             
             return_successful = current_user_for_return.return_book(item_title_return)
             if return_successful == True: 

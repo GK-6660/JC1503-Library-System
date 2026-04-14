@@ -1,49 +1,25 @@
 {
     "users": [
         {
-            "user_id": "U000",
-            "name": "Test User",
-            "borrowed_items": [],
-            "is_active": true
-        },
-        {
-            "user_id": "U002",
-            "name": "New User",
-            "borrowed_items": [
-                "Another Book"
-            ],
-            "is_active": true
-        },
-        {
-            "user_id": "User1",
+            "user_id": "U001",
             "name": "Alice",
-            "borrowed_items": [],
+            "borrowed_items": [
+                "Python101"
+            ],
             "is_active": true
         }
     ],
     "books": [
         {
-            "resource_id": "B002",
-            "title": "Another Book",
+            "resource_id": "B001",
+            "title": "Python101",
             "total_copies": 3,
             "available_copies": 2,
             "waitlist": [],
             "type": "Book",
             "is_available_status": true,
-            "author": "Author X",
-            "isbn": "ISBN-002",
-            "is_fiction_book": true
-        },
-        {
-            "resource_id": "B000",
-            "title": "New Book Title",
-            "total_copies": 5,
-            "available_copies": 5,
-            "waitlist": [],
-            "type": "Book",
-            "is_available_status": true,
-            "author": "Author Name",
-            "isbn": "ISBN-000",
+            "author": "Guido",
+            "isbn": "12345",
             "is_fiction_book": true
         }
     ]
