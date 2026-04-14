@@ -44,7 +44,7 @@ class BST:
             print(f"Search failed for key: {search_key}")
             raise ItemNotFoundError("Not found")
         print(f"Key {search_key} found at level {search_result.node_level}.") 
-        return search_result
+        return search_result.value
 
     def _find_node(self, current_node_param, target_key):
         if current_node_param == None:
