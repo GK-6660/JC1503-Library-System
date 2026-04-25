@@ -14,7 +14,7 @@
             "resource_id": "B001",
             "title": "Python101",
             "total_copies": 3,
-            "available_copies": 2,
+            "available_copies": 3,
             "waitlist": [],
             "type": "Book",
             "is_available_status": true,

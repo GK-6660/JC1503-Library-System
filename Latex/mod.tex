@@ -1,0 +1,136 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{array}
+
+% --- Global Layout Tuning ---
+\onehalfspacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlength{\emergencystretch}{2em}
+\setlist[itemize]{itemsep=0.4em, topsep=0.4em, leftmargin=1.5em}
+\renewcommand{\arraystretch}{1.2}
+
+% --- Section Styling ---
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.1em}{0.5em}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue
+}
+
+% --- Python Code Styling ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{codegreen},
+    stringstyle=\color{orange},
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    frame=single
+}
+
+% --- Title Information ---
+\title{Project Report: Library Management System}
+\author{CS Group 5}
+\date{April 24, 2026}
+
+\begin{document}
+
+\maketitle
+\noindent\textbf{Course:} JC1503: Object-Oriented Programming
+
+% --- Name Table ---
+\section*{Individual Contributions}
+\begin{table}[h]
+    \centering
+    \small
+    \begin{tabular}{>{\raggedright\arraybackslash}p{3.1cm} >{\raggedright\arraybackslash}p{5.1cm} >{\raggedright\arraybackslash}p{6.2cm}}
+        \toprule
+        \textbf{Member Name} & \textbf{Responsibilities} & \textbf{Technical Implementation} \\
+        \midrule
+        Zhan Zhijian & Architecture \& Integration & \texttt{LibSys} Controller, \texttt{Storage} (JSON), Git Mgmt \\
+        Zou Wanyan & Business Model \& OOP Design & \texttt{Resource}, \texttt{Book}, \texttt{User} classes, Custom Exceptions \\
+        Qiu Dairui & Linear Data Structures & Doubly Linked List, Stack (LIFO) for Undo \\
+        Zhang Yuting & Search \& Queueing Structures & Hash Table (Chaining), Queue (FIFO) for waitlist \\
+        Liao Yijing & Core Algorithms & Binary Search Tree (Recursive Insert/Search) \\
+        Huang Yueshi & Category Tree \& QA & Multi-way Category Tree, Unit Testing \\
+        \bottomrule
+    \end{tabular}
+    \caption{Summary of individual member responsibilities.}
+\end{table}
+
+\vfill
+\begin{center}
+    \textit{Note: Total report length must not exceed 10 pages.}
+\end{center}
+
+\newpage
+
+\section{System Architecture \& Domain}
+Manual library tracking scales poorly. We built a digitized management system handling books, magazines, and user transaction histories. The platform provides simple operational nodes for adding, searching, and moving inventory while logging all transactions.
+
+Instead of fragmented scripts, a Controller pattern drives the application. \texttt{LibSys} resides in \texttt{main.py}. It bridges the command-line interface and the underlying data models. Users execute actions via the CLI. Memory handles operational states directly. We keep users in a Hash Table and inventory in a Binary Search Tree. State persistence falls to a dedicated \texttt{Storage} module. JSON handles the I/O. The system triggers \texttt{to\_dict()} and \texttt{to\_list()} during teardown and rebuilds objects on startup.
+
+\section{Object-Oriented Implementation}
+We structured the domain models around strict OOP paradigms.
+
+\begin{itemize}
+    \item \textbf{Inheritance}: \texttt{Resource} acts as the base class. It dictates shared states like \texttt{resource\_id} and implements the \texttt{borrow\_item} function. \texttt{Book} and \texttt{Magazine} inherit this foundation. They append specific metadata, such as issue numbers or authors.
+    \item \textbf{Composition}: Python lists were bypassed. Custom structures live directly inside the models. The \texttt{User} class instantiates our \texttt{DoublyLinkedList} for borrowing history. Waitlists rely on a custom \texttt{Queue} nested inside \texttt{Resource}.
+    \item \textbf{Encapsulation \& Polymorphism}: State mutations require specific method calls. Illegal operations throw custom exceptions like \texttt{OutOfStockError}. Serialization required polymorphic behavior. Child classes override \texttt{to\_dict()}. Rebuilding memory states relies on the \texttt{@classmethod from\_dict(cls)} implementation.
+\end{itemize}
+
+\section{Custom Data Structures}
+Standard libraries were ignored to meet project constraints. We built the following primitives:
+
+\begin{itemize}
+    \item \textbf{Stack (LIFO)}: Injected into \texttt{main.py} for global undo functionality. It pushes system states. Users can reverse mistakes easily.
+    \item \textbf{Queue (FIFO)}: Attached to \texttt{Resource}. Returned high-demand items trigger \texttt{dequeue()}, reallocating the resource automatically to the next waiting user.
+    \item \textbf{Binary Search Tree}: Organizes books by title string comparison. Insert and search are recursive.
+    \item \textbf{Hash Table}: Fixed array size of 100. Maps \texttt{User} objects via ID. Chaining resolves collisions.
+\end{itemize}
+
+\section{Efficiency \& Complexity Trade-offs}
+Our data structures face specific Big-O trade-offs. The Hash Table computes ASCII sums modulo 100. Average lookup hits $O(1)$. Anagrams guarantee collision. This forces worst-case $O(n)$ traversal along the chain.
+
+The BST averages $O(\log n)$ for search. No auto-balancing exists. Alphabetical data dumps degrade the tree into a linked line. Search complexity plummets to $O(n)$.
+
+\section{Development Lifecycle \& Bug Resolution}
+We followed iterative integration. Base OOP constructs came first. We then swapped Python lists for custom nodes. Testing needed initial states. Booting creates 30 users, 40 books, and 20 magazines inside \texttt{library\_data.json} automatically via \texttt{generate\_initial\_data()}.
+
+Integration surfaced several blocks.
+The borrowing module threw an \texttt{AttributeError}. The \texttt{search} routine returned the structural \texttt{Node} wrapper, not the payload. Invoking \texttt{node.value.borrow\_item()} fixed the pointer issue.
+
+Passing custom objects to \texttt{json.dump()} threw \texttt{TypeError}s. Complex memory representations had to be flattened. Implementing \texttt{to\_dict()} and \texttt{to\_list()} stripped objects down to base Python dictionaries.
+
+Merging into \texttt{main.py} broke execution. The "Menu Logic" and "Persistence" branches collided. Manual diff resolution patched the sequence. We forced \texttt{load\_data()} to execute synchronously before the CLI loop started.
+
+\section{Testing \& Reflection}
+Basic structures underwent unit checks first to ensure chaining worked. CLI end-to-end testing followed. Repeatedly borrowing items and triggering the stack's "undo" validated memory state rollbacks.
+
+The architecture separates structural nodes from manager logic. This maintained readable code boundaries. Core requirements are functional.
+
+Technical debt is evident. The naive hashing algorithm and hardcoded capacity of 100 guarantee chain degradation. $O(1)$ efficiency will vanish at scale. Pre-sorted JSON loading skews the unbalanced BST instantly, creating $O(n)$ bottlenecks.
+
+Future iterations require refactoring the Hash Table to use DJB2 with dynamic resizing. The BST needs upgrading to an AVL Tree to enforce $O(\log n)$ constraints. A graphical interface should replace the CLI.
+
+Writing low-level structures clarified memory management. Tracing \texttt{next}, \texttt{left}, and \texttt{right} pointers forces an understanding of boundaries. Interface contracts matter deeply in team environments. Returning a wrapper instead of a domain object breaks downstream dependencies.
+
+\end{document}

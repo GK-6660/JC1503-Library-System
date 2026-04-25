@@ -31,6 +31,10 @@ class LibSys:
                 self.borrow_item()
             elif user_input_choice == "4":
                 self.return_item()
+            elif user_input_choice == "7":
+                self.delete_user()
+            elif user_input_choice == "8":
+                self.delete_book()
             elif user_input_choice == "5":
                 self.undo_last_action()
             elif user_input_choice == "6":
@@ -49,6 +53,8 @@ class LibSys:
         print("2. Add book")
         print("3. Borrow book")
         print("4. Return book")
+        print("7. Delete user")
+        print("8. Delete book")
         print("5. Undo")
         print("6. Show History")
         print("0. Exit")
@@ -153,6 +159,60 @@ class LibSys:
         except ItemNotFoundError:
             print("Error: User or item not found for return.")
 
+    def delete_user(self):
+        user_id_to_delete = input("ID: ").strip()
+        if user_id_to_delete == "":
+            print("Empty input! Try again.")
+            return
+
+        try:
+            user_obj_to_delete = self.users.get(user_id_to_delete)
+            borrowed_count_num = len(user_obj_to_delete.borrowed_items)
+            if borrowed_count_num > 0:
+                print("Cannot delete user: user still has borrowed items.")
+                return
+
+            self.users.remove(user_id_to_delete)
+            self.history_stack.push({
+                "action_type": "delete_user",
+                "user_id": user_id_to_delete,
+                "user_obj": user_obj_to_delete
+            })
+            print("User deleted ok!")
+        except ItemNotFoundError:
+            print("Error: User not found.")
+        except LibraryBaseException as e:
+            print(f"Error: {e}")
+
+    def delete_book(self):
+        item_title_to_delete = input("Title: ").strip()
+        if item_title_to_delete == "":
+            print("Empty input! Try again.")
+            return
+
+        try:
+            item_obj_to_delete = self.books.search(item_title_to_delete)
+
+            if item_obj_to_delete.available_copies != item_obj_to_delete.total_copies:
+                print("Cannot delete book: item is currently borrowed.")
+                return
+
+            if item_obj_to_delete.waitlist.is_empty() == False:
+                print("Cannot delete book: waitlist is not empty.")
+                return
+
+            self.books.remove(item_title_to_delete)
+            self.history_stack.push({
+                "action_type": "delete_book",
+                "item_title": item_title_to_delete,
+                "item_obj": item_obj_to_delete
+            })
+            print("Book deleted ok!")
+        except ItemNotFoundError:
+            print("Error: Book not found.")
+        except LibraryBaseException as e:
+            print(f"Error: {e}")
+
     def undo_last_action(self):
         last_action_data = self.history_stack.pop()
         if last_action_data == None:
@@ -172,6 +232,16 @@ class LibSys:
                 self.books.remove(item_title_to_remove)
                 print(f"Book {item_title_to_remove} removed as part of undo.")
                 
+            elif action_type_to_undo == "delete_user":
+                user_obj_to_restore = last_action_data["user_obj"]
+                self.users.insert(user_obj_to_restore.user_id, user_obj_to_restore)
+                print(f"User {user_obj_to_restore.user_id} restored as part of undo.")
+
+            elif action_type_to_undo == "delete_book":
+                item_obj_to_restore = last_action_data["item_obj"]
+                self.books.insert(item_obj_to_restore.title, item_obj_to_restore)
+                print(f"Book {item_obj_to_restore.title} restored as part of undo.")
+
             elif action_type_to_undo == "borrow":
                 user_id_undo_borrow = last_action_data["user_id"]
                 item_title_undo_borrow = last_action_data["item_title"]
